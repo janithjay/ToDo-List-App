@@ -1,5 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.ToDoListApp" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.ToDoListApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Your colors -->
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent_color</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/primary_dark</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
 </resources>
