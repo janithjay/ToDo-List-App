@@ -2,11 +2,14 @@ package com.janithjayashan.todolistapp.ui.activities
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,6 +19,9 @@ import com.janithjayashan.todolistapp.data.database.entities.TodoList
 import com.janithjayashan.todolistapp.ui.adapters.TodoListsAdapter
 import com.janithjayashan.todolistapp.ui.viewmodels.TodoViewModel
 import com.janithjayashan.todolistapp.utils.FirebaseBackupManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class ListsActivity : AppCompatActivity() {
 
@@ -31,7 +37,7 @@ class ListsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         viewModel = ViewModelProvider(this)[TodoViewModel::class.java]
-        backupManager = FirebaseBackupManager()
+        backupManager = FirebaseBackupManager(this)
 
         setupRecyclerView()
         setupFab()
@@ -74,8 +80,11 @@ class ListsActivity : AppCompatActivity() {
     private fun showAddListDialog() {
         val editText = EditText(this)
         editText.hint = "Enter list title"
+        editText.setHintTextColor(ContextCompat.getColor(this, R.color.neon_blue))
+        editText.setTextColor(ContextCompat.getColor(this, R.color.text_primary))
+        editText.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.neon_blue))
 
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this, R.style.NeonDialog)
             .setTitle("Add New List")
             .setView(editText)
             .setPositiveButton("Add") { _, _ ->
@@ -128,11 +137,25 @@ class ListsActivity : AppCompatActivity() {
                 true
             }
             R.id.action_backup -> {
-                backupManager.backupToFirebase(this)
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        backupManager.backupToFirebase()
+                        Toast.makeText(this@ListsActivity, "Backup completed", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@ListsActivity, "Backup failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
                 true
             }
             R.id.action_restore -> {
-                backupManager.restoreFromFirebase(this)
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        backupManager.restoreFromFirebase()
+                        Toast.makeText(this@ListsActivity, "Restore completed", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@ListsActivity, "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
                 true
             }
             R.id.action_search -> {

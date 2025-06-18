@@ -15,4 +15,15 @@
     <color name="background_color">#FFF5F5F5</color>
     <color name="primary_text">#FF212121</color>
     <color name="secondary_text">#FF757575</color>
+
+    <color name="background_dark">#181A20</color>
+    <color name="neon_blue">#00F0FF</color>
+    <color name="neon_pink">#FF00C8</color>
+    <color name="neon_green">#39FF14</color>
+    <color name="neon_purple">#A020F0</color>
+    <color name="neon_cyan">#0FFFC1</color>
+    <color name="surface_card">#23263A</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#B0B0B0</color>
+
 </resources>

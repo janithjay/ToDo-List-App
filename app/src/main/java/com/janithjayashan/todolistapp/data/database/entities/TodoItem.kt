@@ -2,6 +2,7 @@ package com.janithjayashan.todolistapp.data.database.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -11,7 +12,8 @@ import androidx.room.PrimaryKey
         parentColumns = arrayOf("id"),
         childColumns = arrayOf("listId"),
         onDelete = ForeignKey.CASCADE
-    )]
+    )],
+    indices = [Index("listId")]
 )
 data class TodoItem(
     @PrimaryKey(autoGenerate = true)

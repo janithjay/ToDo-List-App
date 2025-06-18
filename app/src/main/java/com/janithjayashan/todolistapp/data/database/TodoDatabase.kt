@@ -9,7 +9,7 @@ import com.janithjayashan.todolistapp.data.database.entities.TodoList
 
 @Database(
     entities = [TodoList::class, TodoItem::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class TodoDatabase : RoomDatabase() {
@@ -26,7 +26,9 @@ abstract class TodoDatabase : RoomDatabase() {
                     context.applicationContext,
                     TodoDatabase::class.java,
                     "todo_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

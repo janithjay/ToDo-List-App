@@ -46,4 +46,24 @@ interface TodoDao {
 
     @Query("SELECT * FROM todo_items WHERE description LIKE '%' || :searchQuery || '%'")
     suspend fun searchItems(searchQuery: String): List<TodoItem>
+
+    // Backup and Restore functionality
+    @Query("DELETE FROM todo_lists")
+    suspend fun clearLists()
+
+    @Query("DELETE FROM todo_items")
+    suspend fun clearItems()
+
+    @Transaction
+    suspend fun clearAllData() {
+        clearItems()
+        clearLists()
+    }
+
+    // Backup specific operations that return direct lists instead of LiveData
+    @Query("SELECT * FROM todo_lists ORDER BY createdAt DESC")
+    suspend fun getAllListsForBackup(): List<TodoList>
+
+    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY position ASC")
+    suspend fun getItemsByListIdForBackup(listId: Long): List<TodoItem>
 }

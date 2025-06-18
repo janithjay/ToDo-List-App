@@ -10,8 +10,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.janithjayashan.todolistapp.R
 import com.janithjayashan.todolistapp.data.database.entities.TodoList
-import java.text.SimpleDateFormat
-import java.util.*
 
 class TodoListsAdapter(
     private val onListClick: (TodoList) -> Unit,
@@ -30,16 +28,13 @@ class TodoListsAdapter(
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val titleTextView: TextView = itemView.findViewById(R.id.textViewListTitle)
-        private val dateTextView: TextView = itemView.findViewById(R.id.textViewListDate)
-        private val editButton: ImageButton = itemView.findViewById(R.id.buttonEdit)
-        private val deleteButton: ImageButton = itemView.findViewById(R.id.buttonDelete)
+        private val titleTextView: TextView = itemView.findViewById(R.id.tvListTitle)
+        private val editButton: ImageButton = itemView.findViewById(R.id.btnEdit)
+        private val deleteButton: ImageButton = itemView.findViewById(R.id.btnDelete)
 
         fun bind(todoList: TodoList) {
             titleTextView.text = todoList.title
 
-            val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-            dateTextView.text = dateFormat.format(Date(todoList.createdAt))
 
             itemView.setOnClickListener { onListClick(todoList) }
             editButton.setOnClickListener { onEditClick(todoList) }
