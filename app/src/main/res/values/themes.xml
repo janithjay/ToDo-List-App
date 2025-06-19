@@ -18,6 +18,13 @@
         <item name="android:buttonStyle">@style/NeonButton</item>
     </style>
 
+    <style name="Theme.ToDoListApp.NoActionBar" parent="Theme.ToDoListApp">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
     <style name="NeonButton" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/neon_blue</item>
         <item name="android:textColor">@color/text_primary</item>
