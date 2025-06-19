@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ToDoListApp</string>
+    <string name="app_name">ToDo List</string>
     <string name="welcome_message">Welcome to Janith Jayashan\'s TO DO List!</string>
     <string name="developer_info">This App was developed by R M J Jayashan (D/BCE/23/0009)</string>
     <string name="go_to_lists">Go to Lists</string>
