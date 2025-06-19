@@ -1,14 +1,16 @@
 package com.janithjayashan.todolistapp.auth
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.janithjayashan.todolistapp.utils.FirebaseBackupManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val auth = FirebaseAuth.getInstance()
 
     private val _authState = MutableStateFlow<AuthenticationState>(AuthenticationState.Unauthenticated)
@@ -50,8 +52,20 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun getContext(): Application {
+        return getApplication()
+    }
+
     fun signOut() {
-        auth.signOut()
-        _authState.value = AuthenticationState.Unauthenticated
+        viewModelScope.launch {
+            val backupManager = FirebaseBackupManager(getContext())
+            // Backup before signing out
+            backupManager.backupToFirebase()
+            // Clear local data
+            backupManager.clearLocalData()
+            // Sign out from Firebase
+            auth.signOut()
+            _authState.value = AuthenticationState.Unauthenticated
+        }
     }
 }

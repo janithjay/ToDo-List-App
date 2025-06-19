@@ -14,15 +14,7 @@ import kotlinx.coroutines.tasks.await
 import com.google.firebase.database.GenericTypeIndicator
 
 class FirebaseBackupManager(private val context: Context) {
-    private val database: FirebaseDatabase
-
-    init {
-        // Initialize Firebase with persistence
-        FirebaseDatabase.getInstance().apply {
-            setPersistenceEnabled(true)
-            database = this
-        }
-    }
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val scope = CoroutineScope(Dispatchers.IO + Job())
     private val pendingBackups = mutableListOf<suspend () -> Unit>()
@@ -163,6 +155,101 @@ class FirebaseBackupManager(private val context: Context) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, "No backup data found", Toast.LENGTH_SHORT).show()
                     }
+                }
+            }
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    suspend fun clearLocalData() {
+        val todoDao = TodoDatabase.getDatabase(context).todoDao()
+        todoDao.clearAllData()
+    }
+
+    suspend fun restoreUserData() {
+        try {
+            val userId = getCurrentUserId()
+            if (userId == null) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "No user logged in", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+
+            if (!isNetworkAvailable()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "No internet connection available", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+
+            val userRef = database.getReference("users").child(userId)
+            val dataSnapshot = userRef.get().await()
+
+            if (dataSnapshot.exists() && !dataSnapshot.child("lists").exists()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "No backup data found for this user", Toast.LENGTH_SHORT).show()
+                }
+                return
+            }
+
+            val todoDao = TodoDatabase.getDatabase(context).todoDao()
+
+            if (dataSnapshot.exists()) {
+                // Clear existing data before restoring
+                todoDao.clearAllData()
+
+                // Restore lists with all fields
+                val listsSnapshot = dataSnapshot.child("lists")
+                val lists = mutableListOf<TodoList>()
+                for (listSnapshot in listsSnapshot.children) {
+                    val map = listSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
+                    if (map != null) {
+                        lists.add(TodoList(
+                            id = (map["id"] as? Long) ?: 0L,
+                            title = (map["title"] as? String) ?: "",
+                            description = (map["description"] as? String) ?: "",
+                            selectedDate = (map["selectedDate"] as? Long) ?: System.currentTimeMillis(),
+                            selectedTime = (map["selectedTime"] as? String) ?: "",
+                            createdAt = (map["createdAt"] as? Long) ?: System.currentTimeMillis()
+                        ))
+                    }
+                }
+
+                if (lists.isNotEmpty()) {
+                    todoDao.insertAllLists(lists)
+                }
+
+                // Restore items if they exist
+                val itemsSnapshot = dataSnapshot.child("items")
+                if (itemsSnapshot.exists()) {
+                    val items = mutableListOf<TodoItem>()
+                    for (itemSnapshot in itemsSnapshot.children) {
+                        val map = itemSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
+                        if (map != null) {
+                            items.add(TodoItem(
+                                id = (map["id"] as? Long) ?: 0L,
+                                listId = (map["listId"] as? Long) ?: 0L,
+                                description = (map["description"] as? String) ?: "",
+                                position = ((map["position"] as? Long)?.toInt()) ?: 0,
+                                completed = (map["completed"] as? Boolean) ?: false
+                            ))
+                        }
+                    }
+                    if (items.isNotEmpty()) {
+                        todoDao.insertAllItems(items)
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "User data restored successfully", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Starting with fresh data for new user", Toast.LENGTH_SHORT).show()
                 }
             }
         } catch (e: Exception) {

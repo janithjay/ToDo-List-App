@@ -243,12 +243,27 @@ class ListsActivity : AppCompatActivity() {
                 true
             }
             R.id.action_logout -> {
-                FirebaseAuth.getInstance().signOut()
-                // Navigate back to MainActivity (login screen)
-                val intent = Intent(this, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+                // Show confirmation dialog before logout
+                AlertDialog.Builder(this)
+                    .setTitle("Logout")
+                    .setMessage("Your data will be backed up before logging out. Do you want to continue?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        CoroutineScope(Dispatchers.Main).launch {
+                            // First backup the current data
+                            backupManager.backupToFirebase()
+                            // Clear local data
+                            backupManager.clearLocalData()
+                            // Logout from Firebase
+                            FirebaseAuth.getInstance().signOut()
+                            // Navigate back to MainActivity (login screen)
+                            val intent = Intent(this@ListsActivity, MainActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            finish()
+                        }
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
                 true
             }
             R.id.action_backup -> {
@@ -258,9 +273,17 @@ class ListsActivity : AppCompatActivity() {
                 true
             }
             R.id.action_restore -> {
-                CoroutineScope(Dispatchers.Main).launch {
-                    backupManager.restoreFromFirebase()
-                }
+                // Show confirmation dialog before restore
+                AlertDialog.Builder(this)
+                    .setTitle("Restore Data")
+                    .setMessage("This will restore your data from the last backup. Current data will be replaced. Continue?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        CoroutineScope(Dispatchers.Main).launch {
+                            backupManager.restoreUserData()
+                        }
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
                 true
             }
             else -> super.onOptionsItemSelected(item)

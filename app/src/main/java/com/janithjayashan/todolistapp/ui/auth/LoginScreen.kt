@@ -9,6 +9,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.janithjayashan.todolistapp.auth.AuthViewModel
 import com.janithjayashan.todolistapp.auth.AuthenticationState
+import com.janithjayashan.todolistapp.utils.FirebaseBackupManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
@@ -18,12 +20,18 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isSignUp by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val authState by viewModel.authState.collectAsState()
 
     LaunchedEffect(authState) {
         if (authState is AuthenticationState.Authenticated) {
-            onAuthSuccess()
+            // Restore user data before navigating
+            scope.launch {
+                val backupManager = FirebaseBackupManager(viewModel.getContext())
+                backupManager.restoreUserData()
+                onAuthSuccess()
+            }
         }
     }
 
