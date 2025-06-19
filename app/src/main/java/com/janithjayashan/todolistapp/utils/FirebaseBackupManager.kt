@@ -26,6 +26,16 @@ class FirebaseBackupManager(private val context: Context) {
     private val scope = CoroutineScope(Dispatchers.IO + Job())
     private val pendingBackups = mutableListOf<suspend () -> Unit>()
 
+    // Check if user is logged in
+    fun isUserLoggedIn(): Boolean {
+        return auth.currentUser != null
+    }
+
+    // Get current user ID
+    fun getCurrentUserId(): String? {
+        return auth.currentUser?.uid
+    }
+
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork
@@ -38,41 +48,23 @@ class FirebaseBackupManager(private val context: Context) {
 
     suspend fun backupToFirebase() {
         try {
-            if (!auth.currentUser?.uid.isNullOrEmpty() || authenticateAnonymously()) {
-                performBackup()
+            val userId = getCurrentUserId()
+            if (userId == null) {
+                showToast("Please log in to backup your data")
+                return
             }
+            performBackup(userId)
         } catch (e: Exception) {
             handleBackupFailure(e)
         }
     }
 
-    private suspend fun authenticateAnonymously(): Boolean {
-        return try {
-            if (auth.currentUser == null) {
-                val result = auth.signInAnonymously().await()
-                if (result.user == null) {
-                    showToast("Failed to authenticate anonymously")
-                    return false
-                }
-            }
-            true
-        } catch (e: Exception) {
-            showToast("Authentication failed: ${e.localizedMessage ?: "Unknown error"}")
-            false
-        }
-    }
-
-    private suspend fun performBackup() {
-        val userId = auth.currentUser?.uid ?: run {
-            showToast("Not authenticated")
-            return
-        }
-
-        val backupRef = database.reference.child("backups").child(userId)
+    private suspend fun performBackup(userId: String) {
+        val backupRef = database.reference.child("user_backups").child(userId)
         val todoDao = TodoDatabase.getDatabase(context).todoDao()
 
         try {
-            // Get all lists using the new direct method
+            // Get all lists using the direct method
             val lists = todoDao.getAllListsForBackup()
 
             // Get all items for each list using the new direct method
@@ -129,21 +121,19 @@ class FirebaseBackupManager(private val context: Context) {
 
     suspend fun restoreFromFirebase() {
         try {
-            if (!auth.currentUser?.uid.isNullOrEmpty() || authenticateAnonymously()) {
-                performRestore()
+            val userId = getCurrentUserId()
+            if (userId == null) {
+                showToast("Please log in to restore your data")
+                return
             }
+            performRestore(userId)
         } catch (e: Exception) {
             handleRestoreFailure(e)
         }
     }
 
-    private suspend fun performRestore() {
-        val userId = auth.currentUser?.uid ?: run {
-            showToast("Not authenticated")
-            return
-        }
-
-        val backupRef = database.reference.child("backups").child(userId)
+    private suspend fun performRestore(userId: String) {
+        val backupRef = database.reference.child("user_backups").child(userId)
 
         try {
             val snapshot = backupRef.get().await()

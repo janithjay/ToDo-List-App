@@ -19,6 +19,7 @@ import com.janithjayashan.todolistapp.data.database.entities.TodoList
 import com.janithjayashan.todolistapp.ui.adapters.TodoListsAdapter
 import com.janithjayashan.todolistapp.ui.viewmodels.TodoViewModel
 import com.janithjayashan.todolistapp.utils.FirebaseBackupManager
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -126,67 +127,49 @@ class ListsActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.lists_menu, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
+                onBackPressed()
+                true
+            }
+            R.id.action_logout -> {
+                FirebaseAuth.getInstance().signOut()
+                // Navigate back to MainActivity (login screen)
+                val intent = Intent(this, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
                 finish()
                 true
             }
             R.id.action_backup -> {
                 CoroutineScope(Dispatchers.Main).launch {
-                    try {
-                        backupManager.backupToFirebase()
-                        Toast.makeText(this@ListsActivity, "Backup completed", Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) {
-                        Toast.makeText(this@ListsActivity, "Backup failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
+                    backupManager.backupToFirebase()
                 }
                 true
             }
             R.id.action_restore -> {
                 CoroutineScope(Dispatchers.Main).launch {
-                    try {
-                        backupManager.restoreFromFirebase()
-                        Toast.makeText(this@ListsActivity, "Restore completed", Toast.LENGTH_SHORT).show()
-                    } catch (e: Exception) {
-                        Toast.makeText(this@ListsActivity, "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
+                    backupManager.restoreFromFirebase()
                 }
-                true
-            }
-            R.id.action_search -> {
-                showSearchDialog()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun showSearchDialog() {
-        val editText = EditText(this)
-        editText.hint = "Enter search term"
-
-        AlertDialog.Builder(this)
-            .setTitle("Search Lists")
-            .setView(editText)
-            .setPositiveButton("Search") { _, _ ->
-                val query = editText.text.toString().trim()
-                if (query.isNotEmpty()) {
-                    viewModel.searchLists(query)
-                    observeSearchResults()
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun observeSearchResults() {
-        viewModel.searchResults.observe(this) { results ->
-            adapter.submitList(results)
+    override fun onStart() {
+        super.onStart()
+        // Check if user is logged in, if not, redirect to login
+        if (!backupManager.isUserLoggedIn()) {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
         }
     }
 }
