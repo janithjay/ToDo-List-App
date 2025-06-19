@@ -11,6 +11,7 @@ import com.janithjayashan.todolistapp.data.database.entities.TodoItem
 import com.janithjayashan.todolistapp.data.database.entities.TodoList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.database.GenericTypeIndicator
 
 class FirebaseBackupManager(private val context: Context) {
     private val database: FirebaseDatabase
@@ -49,171 +50,125 @@ class FirebaseBackupManager(private val context: Context) {
     suspend fun backupToFirebase() {
         try {
             val userId = getCurrentUserId()
-            if (userId == null) {
-                showToast("Please log in to backup your data")
-                return
-            }
-            performBackup(userId)
-        } catch (e: Exception) {
-            handleBackupFailure(e)
-        }
-    }
-
-    private suspend fun performBackup(userId: String) {
-        val backupRef = database.reference.child("user_backups").child(userId)
-        val todoDao = TodoDatabase.getDatabase(context).todoDao()
-
-        try {
-            // Get all lists using the direct method
-            val lists = todoDao.getAllListsForBackup()
-
-            // Get all items for each list using the new direct method
-            val allItems = mutableListOf<TodoItem>()
-            for (list in lists) {
-                val items = todoDao.getItemsByListIdForBackup(list.id)
-                allItems.addAll(items)
-            }
-
-            if (lists.isEmpty()) {
-                showToast("No data to backup")
+            if (!isNetworkAvailable()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "No internet connection available", Toast.LENGTH_SHORT).show()
+                }
                 return
             }
 
-            // Convert lists and items to serializable maps
-            val serializedLists = lists.map { list ->
-                mapOf(
-                    "id" to list.id,
-                    "title" to list.title,
-                    "createdAt" to list.createdAt
-                )
-            }
+            if (userId != null) {
+                val todoDao = TodoDatabase.getDatabase(context).todoDao()
+                val lists = todoDao.getAllListsSync()
+                val items = todoDao.getAllItemsSync()
 
-            val serializedItems = allItems.map { item ->
-                mapOf(
-                    "id" to item.id,
-                    "listId" to item.listId,
-                    "description" to item.description,
-                    "isCompleted" to item.isCompleted,
-                    "position" to item.position,
-                    "createdAt" to item.createdAt
-                )
-            }
+                val userRef = database.getReference("users").child(userId)
+                
+                // Backup lists with all fields
+                val listsData = lists.map { list ->
+                    mapOf(
+                        "id" to list.id,
+                        "title" to list.title,
+                        "description" to list.description,
+                        "selectedDate" to list.selectedDate,
+                        "selectedTime" to list.selectedTime,
+                        "createdAt" to list.createdAt
+                    )
+                }
+                userRef.child("lists").setValue(listsData).await()
 
-            // Create the backup data
-            val backupData = mapOf(
-                "lists" to serializedLists,
-                "items" to serializedItems,
-                "timestamp" to System.currentTimeMillis()
-            )
+                // Backup items
+                val itemsData = items.map { item ->
+                    mapOf(
+                        "id" to item.id,
+                        "listId" to item.listId,
+                        "description" to item.description,
+                        "position" to item.position,
+                        "completed" to item.completed
+                    )
+                }
+                userRef.child("items").setValue(itemsData).await()
 
-            if (isNetworkAvailable()) {
-                backupRef.setValue(backupData).await()
-                showToast("Backup successful: ${lists.size} lists and ${allItems.size} items")
-            } else {
-                pendingBackups.add { backupRef.setValue(backupData).await() }
-                showToast("Backup queued for when network is available")
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Backup completed successfully", Toast.LENGTH_SHORT).show()
+                }
             }
         } catch (e: Exception) {
-            showToast("Backup failed: ${e.localizedMessage ?: "Unknown error"}")
-            e.printStackTrace()
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Backup failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     suspend fun restoreFromFirebase() {
         try {
             val userId = getCurrentUserId()
-            if (userId == null) {
-                showToast("Please log in to restore your data")
-                return
-            }
-            performRestore(userId)
-        } catch (e: Exception) {
-            handleRestoreFailure(e)
-        }
-    }
-
-    private suspend fun performRestore(userId: String) {
-        val backupRef = database.reference.child("user_backups").child(userId)
-
-        try {
-            val snapshot = backupRef.get().await()
-            if (!snapshot.exists()) {
-                showToast("No backup found")
-                return
-            }
-
-            val listsSnapshot = snapshot.child("lists")
-            val itemsSnapshot = snapshot.child("items")
-
-            if (!listsSnapshot.exists()) {
-                showToast("No lists found in backup")
-                return
-            }
-
-            val todoDao = TodoDatabase.getDatabase(context).todoDao()
-
-            try {
-                // Clear existing data
-                todoDao.clearAllData()
-
-                // Restore lists
-                val lists = mutableListOf<TodoList>()
-                listsSnapshot.children.forEach { listSnapshot ->
-                    try {
-                        val list = TodoList(
-                            id = (listSnapshot.child("id").value as Number).toLong(),
-                            title = listSnapshot.child("title").value as String,
-                            createdAt = (listSnapshot.child("createdAt").value as Number?)?.toLong()
-                                ?: System.currentTimeMillis()
-                        )
-                        lists.add(list)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        showToast("Error parsing list: ${e.localizedMessage}")
-                    }
+            if (!isNetworkAvailable()) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "No internet connection available", Toast.LENGTH_SHORT).show()
                 }
+                return
+            }
 
-                // Restore items
-                val items = mutableListOf<TodoItem>()
-                itemsSnapshot.children.forEach { itemSnapshot ->
-                    try {
-                        val item = TodoItem(
-                            id = (itemSnapshot.child("id").value as Number).toLong(),
-                            listId = (itemSnapshot.child("listId").value as Number).toLong(),
-                            description = itemSnapshot.child("description").value as String,
-                            isCompleted = itemSnapshot.child("isCompleted").value as Boolean,
-                            position = (itemSnapshot.child("position").value as Number).toInt(),
-                            createdAt = (itemSnapshot.child("createdAt").value as Number?)?.toLong()
-                                ?: System.currentTimeMillis()
-                        )
-                        items.add(item)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        showToast("Error parsing item: ${e.localizedMessage}")
-                    }
-                }
+            if (userId != null) {
+                val userRef = database.getReference("users").child(userId)
+                val dataSnapshot = userRef.get().await()
 
-                // Insert the restored data
-                if (lists.isNotEmpty()) {
-                    lists.forEach { list ->
-                        todoDao.insertList(list)
+                if (dataSnapshot.exists()) {
+                    val todoDao = TodoDatabase.getDatabase(context).todoDao()
+
+                    // Clear existing data
+                    todoDao.deleteAllLists()
+                    todoDao.deleteAllItems()
+
+                    // Restore lists with all fields
+                    val listsSnapshot = dataSnapshot.child("lists")
+                    val lists = mutableListOf<TodoList>()
+                    for (listSnapshot in listsSnapshot.children) {
+                        val map = listSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
+                        if (map != null) {
+                            lists.add(TodoList(
+                                id = (map["id"] as? Long) ?: 0L,
+                                title = (map["title"] as? String) ?: "",
+                                description = (map["description"] as? String) ?: "",
+                                selectedDate = (map["selectedDate"] as? Long) ?: System.currentTimeMillis(),
+                                selectedTime = (map["selectedTime"] as? String) ?: "",
+                                createdAt = (map["createdAt"] as? Long) ?: System.currentTimeMillis()
+                            ))
+                        }
                     }
-                    items.forEach { item ->
-                        todoDao.insertItem(item)
+                    todoDao.insertAllLists(lists)
+
+                    // Restore items
+                    val itemsSnapshot = dataSnapshot.child("items")
+                    val items = mutableListOf<TodoItem>()
+                    for (itemSnapshot in itemsSnapshot.children) {
+                        val map = itemSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
+                        if (map != null) {
+                            items.add(TodoItem(
+                                id = (map["id"] as? Long) ?: 0L,
+                                listId = (map["listId"] as? Long) ?: 0L,
+                                description = (map["description"] as? String) ?: "",
+                                position = ((map["position"] as? Long)?.toInt()) ?: 0,
+                                completed = (map["completed"] as? Boolean) ?: false
+                            ))
+                        }
                     }
-                    showToast("Restore successful: ${lists.size} lists and ${items.size} items")
+                    todoDao.insertAllItems(items)
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Restore completed successfully", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
-                    showToast("No valid lists found in backup")
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "No backup data found", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                showToast("Database error: ${e.localizedMessage}")
-                throw e
             }
         } catch (e: Exception) {
-            e.printStackTrace()
-            showToast("Restore failed: ${e.localizedMessage}")
-            throw e
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

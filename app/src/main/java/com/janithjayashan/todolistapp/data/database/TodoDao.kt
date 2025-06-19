@@ -49,15 +49,27 @@ interface TodoDao {
 
     // Backup and Restore functionality
     @Query("DELETE FROM todo_lists")
-    suspend fun clearLists()
+    suspend fun deleteAllLists()
 
     @Query("DELETE FROM todo_items")
-    suspend fun clearItems()
+    suspend fun deleteAllItems()
+
+    @Query("SELECT * FROM todo_lists ORDER BY createdAt DESC")
+    suspend fun getAllListsSync(): List<TodoList>
+
+    @Query("SELECT * FROM todo_items ORDER BY listId, position")
+    suspend fun getAllItemsSync(): List<TodoItem>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllLists(lists: List<TodoList>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllItems(items: List<TodoItem>)
 
     @Transaction
     suspend fun clearAllData() {
-        clearItems()
-        clearLists()
+        deleteAllItems()
+        deleteAllLists()
     }
 
     // Backup specific operations that return direct lists instead of LiveData

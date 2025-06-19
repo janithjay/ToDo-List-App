@@ -20,7 +20,6 @@ data class TodoItem(
     val id: Long = 0,
     val listId: Long,
     val description: String,
-    val isCompleted: Boolean = false,
     val position: Int = 0,
-    val createdAt: Long = System.currentTimeMillis()
+    val completed: Boolean = false
 )

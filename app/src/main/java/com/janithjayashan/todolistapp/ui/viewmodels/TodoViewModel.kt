@@ -24,6 +24,13 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getItemsByListId(listId: Long): LiveData<List<TodoItem>> = repository.getItemsByListId(listId)
 
+    fun insertList(todoList: TodoList) {
+        viewModelScope.launch {
+            repository.insertList(todoList)
+        }
+    }
+
+    // Keep this for backward compatibility
     fun insertList(title: String) {
         viewModelScope.launch {
             repository.insertList(TodoList(title = title))

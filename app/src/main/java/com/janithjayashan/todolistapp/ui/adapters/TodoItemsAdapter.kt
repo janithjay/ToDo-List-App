@@ -36,11 +36,11 @@ class TodoItemsAdapter(
         private val deleteButton: ImageButton = itemView.findViewById(R.id.buttonDeleteItem)
 
         fun bind(todoItem: TodoItem) {
-            checkBox.isChecked = todoItem.isCompleted
+            checkBox.isChecked = todoItem.completed
             descriptionTextView.text = todoItem.description
 
             // Strike through completed items
-            if (todoItem.isCompleted) {
+            if (todoItem.completed) {
                 descriptionTextView.paintFlags = descriptionTextView.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             } else {
                 descriptionTextView.paintFlags = descriptionTextView.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()

@@ -43,7 +43,7 @@ class TodoListDetailActivity : AppCompatActivity() {
         adapter = TodoItemsAdapter(
             onItemClick = { todoItem ->
                 // Toggle completion status
-                viewModel.updateItem(todoItem.copy(isCompleted = !todoItem.isCompleted))
+                viewModel.updateItem(todoItem.copy(completed = !todoItem.completed))
             },
             onDeleteClick = { todoItem ->
                 showDeleteConfirmation(todoItem)
