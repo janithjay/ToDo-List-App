@@ -4,7 +4,6 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -12,9 +11,8 @@ import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -38,6 +36,7 @@ class ListsActivity : AppCompatActivity() {
     private lateinit var backupManager: FirebaseBackupManager
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private var allLists = listOf<TodoList>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,8 +49,42 @@ class ListsActivity : AppCompatActivity() {
         backupManager = FirebaseBackupManager(this)
 
         setupRecyclerView()
+        setupSearchView()
         setupFab()
         observeLists()
+
+        // Handle back press with the new recommended way
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                finish()
+            }
+        })
+    }
+
+    private fun setupSearchView() {
+        val searchView = findViewById<androidx.appcompat.widget.SearchView>(R.id.searchView)
+        searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterLists(newText)
+                return true
+            }
+        })
+    }
+
+    private fun filterLists(query: String?) {
+        if (query.isNullOrBlank()) {
+            adapter.submitList(allLists)
+        } else {
+            val filteredList = allLists.filter { todoList ->
+                todoList.title.contains(query, ignoreCase = true) ||
+                todoList.description.contains(query, ignoreCase = true)
+            }
+            adapter.submitList(filteredList)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -83,6 +116,7 @@ class ListsActivity : AppCompatActivity() {
 
     private fun observeLists() {
         viewModel.getAllLists().observe(this) { lists ->
+            allLists = lists
             adapter.submitList(lists)
         }
     }
@@ -239,7 +273,7 @@ class ListsActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                onBackPressed()
+                finish()
                 true
             }
             R.id.action_logout -> {
