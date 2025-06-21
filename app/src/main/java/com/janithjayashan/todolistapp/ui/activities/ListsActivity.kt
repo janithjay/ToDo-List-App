@@ -36,7 +36,6 @@ class ListsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_lists)
 
         supportActionBar?.title = "Your Lists"
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         viewModel = ViewModelProvider(this)[TodoViewModel::class.java]
         backupManager = FirebaseBackupManager(this)
@@ -195,10 +194,6 @@ class ListsActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            android.R.id.home -> {
-                finish()
-                true
-            }
             R.id.sort_created_newest -> {
                 item.isChecked = true
                 sortLists { lists -> lists.sortedByDescending { it.createdAt } }
