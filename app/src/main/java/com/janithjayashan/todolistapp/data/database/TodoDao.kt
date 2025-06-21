@@ -12,8 +12,14 @@ interface TodoDao {
     @Query("SELECT * FROM todo_lists ORDER BY createdAt DESC")
     fun getAllLists(): LiveData<List<TodoList>>
 
+    @Query("SELECT * FROM todo_lists ORDER BY createdAt DESC")
+    suspend fun getAllListsSync(): List<TodoList>
+
     @Insert
     suspend fun insertList(todoList: TodoList): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllLists(lists: List<TodoList>)
 
     @Update
     suspend fun updateList(todoList: TodoList)
@@ -28,8 +34,14 @@ interface TodoDao {
     @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY dueDate ASC, dueTime ASC, position ASC")
     fun getItemsByListId(listId: Long): LiveData<List<TodoItem>>
 
+    @Query("SELECT * FROM todo_items")
+    suspend fun getAllItemsSync(): List<TodoItem>
+
     @Insert
     suspend fun insertItem(todoItem: TodoItem): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllItems(items: List<TodoItem>)
 
     @Update
     suspend fun updateItem(todoItem: TodoItem)
@@ -37,57 +49,18 @@ interface TodoDao {
     @Delete
     suspend fun deleteItem(todoItem: TodoItem)
 
+    @Query("DELETE FROM todo_lists")
+    suspend fun clearAllData()
+
+    @Query("DELETE FROM todo_items WHERE listId = :listId")
+    suspend fun deleteItemsByListId(listId: Long)
+
     @Query("UPDATE todo_items SET position = :newPosition WHERE id = :itemId")
     suspend fun updateItemPosition(itemId: Long, newPosition: Int)
 
-    // Enhanced search functionality
-    @Query("SELECT DISTINCT todo_lists.* FROM todo_lists " +
-           "INNER JOIN todo_items ON todo_lists.id = todo_items.listId " +
-           "WHERE todo_items.title LIKE '%' || :searchQuery || '%' " +
-           "OR todo_items.description LIKE '%' || :searchQuery || '%' " +
-           "OR todo_lists.title LIKE '%' || :searchQuery || '%'")
+    @Query("SELECT * FROM todo_lists WHERE title LIKE '%' || :searchQuery || '%'")
     suspend fun searchLists(searchQuery: String): List<TodoList>
 
-    @Query("SELECT * FROM todo_items WHERE title LIKE '%' || :searchQuery || '%' " +
-           "OR description LIKE '%' || :searchQuery || '%'")
+    @Query("SELECT * FROM todo_items WHERE title LIKE '%' || :searchQuery || '%'")
     suspend fun searchItems(searchQuery: String): List<TodoItem>
-
-    // Due date queries
-    @Query("SELECT * FROM todo_items WHERE listId = :listId AND dueDate = :date")
-    fun getItemsByDueDate(listId: Long, date: Long): LiveData<List<TodoItem>>
-
-    @Query("SELECT * FROM todo_items WHERE listId = :listId AND completed = 0 AND dueDate < :currentDate")
-    fun getOverdueItems(listId: Long, currentDate: Long): LiveData<List<TodoItem>>
-
-    // Backup and Restore functionality
-    @Query("DELETE FROM todo_lists")
-    suspend fun deleteAllLists()
-
-    @Query("DELETE FROM todo_items")
-    suspend fun deleteAllItems()
-
-    @Query("SELECT * FROM todo_lists ORDER BY createdAt DESC")
-    suspend fun getAllListsSync(): List<TodoList>
-
-    @Query("SELECT * FROM todo_items ORDER BY listId, position")
-    suspend fun getAllItemsSync(): List<TodoItem>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllLists(lists: List<TodoList>)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAllItems(items: List<TodoItem>)
-
-    @Transaction
-    suspend fun clearAllData() {
-        deleteAllItems()
-        deleteAllLists()
-    }
-
-    // Backup specific operations that return direct lists instead of LiveData
-    @Query("SELECT * FROM todo_lists ORDER BY createdAt DESC")
-    suspend fun getAllListsForBackup(): List<TodoList>
-
-    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY position ASC")
-    suspend fun getItemsByListIdForBackup(listId: Long): List<TodoItem>
 }

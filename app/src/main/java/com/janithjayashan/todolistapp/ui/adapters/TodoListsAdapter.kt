@@ -42,7 +42,7 @@ class TodoListsAdapter(
             titleTextView.text = todoList.title
             descriptionTextView.text = todoList.description
             dateTextView.text = dateFormat.format(todoList.selectedDate)
-            timeTextView.text = todoList.selectedTime
+            timeTextView.text = todoList.selectedTime.toString()
 
             if (todoList.description.isEmpty()) {
                 descriptionTextView.visibility = View.GONE

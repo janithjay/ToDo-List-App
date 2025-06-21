@@ -8,8 +8,8 @@ data class TodoList(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val title: String,
-    val description: String = "",
-    val selectedDate: Long = System.currentTimeMillis(),
-    val selectedTime: String = "",
+    val description: String = "",  // Default empty description
+    val selectedDate: Long = 0,    // Default 0 for no date
+    val selectedTime: Long = 0, // Default empty for no time
     val createdAt: Long = System.currentTimeMillis()
 )

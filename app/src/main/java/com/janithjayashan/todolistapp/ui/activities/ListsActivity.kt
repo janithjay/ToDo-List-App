@@ -1,8 +1,6 @@
 package com.janithjayashan.todolistapp.ui.activities
 
 import android.app.AlertDialog
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -124,44 +122,21 @@ class ListsActivity : AppCompatActivity() {
     private fun showAddListDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_edit_list, null)
         val titleEdit = dialogView.findViewById<EditText>(R.id.etTitle)
-        val descriptionEdit = dialogView.findViewById<EditText>(R.id.etDescription)
-        val btnSelectDate = dialogView.findViewById<Button>(R.id.btnSelectDate)
-        val btnSelectTime = dialogView.findViewById<Button>(R.id.btnSelectTime)
-        val tvSelectedDateTime = dialogView.findViewById<TextView>(R.id.tvSelectedDateTime)
 
-        val calendar = Calendar.getInstance()
-        var selectedDate = calendar.timeInMillis
-        var selectedTime = timeFormat.format(calendar.time)
-
-        btnSelectDate.setOnClickListener {
-            showDatePicker(calendar) { date ->
-                selectedDate = date
-                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
-            }
-        }
-
-        btnSelectTime.setOnClickListener {
-            showTimePicker(calendar) { time ->
-                selectedTime = time
-                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
-            }
-        }
-
-        // Set initial date/time
-        updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
+        // Hide unnecessary views
+        dialogView.findViewById<EditText>(R.id.etDescription)?.visibility = android.view.View.GONE
+        dialogView.findViewById<Button>(R.id.btnSelectDate)?.visibility = android.view.View.GONE
+        dialogView.findViewById<Button>(R.id.btnSelectTime)?.visibility = android.view.View.GONE
+        dialogView.findViewById<TextView>(R.id.tvSelectedDateTime)?.visibility = android.view.View.GONE
 
         AlertDialog.Builder(this, R.style.NeonDialog)
             .setTitle("Add New List")
             .setView(dialogView)
             .setPositiveButton("Add") { _, _ ->
                 val title = titleEdit.text.toString().trim()
-                val description = descriptionEdit.text.toString().trim()
                 if (title.isNotEmpty()) {
                     val todoList = TodoList(
-                        title = title,
-                        description = description,
-                        selectedDate = selectedDate,
-                        selectedTime = selectedTime
+                        title = title
                     )
                     viewModel.insertList(todoList)
                 }
@@ -173,48 +148,23 @@ class ListsActivity : AppCompatActivity() {
     private fun showEditListDialog(todoList: TodoList) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_edit_list, null)
         val titleEdit = dialogView.findViewById<EditText>(R.id.etTitle)
-        val descriptionEdit = dialogView.findViewById<EditText>(R.id.etDescription)
-        val btnSelectDate = dialogView.findViewById<Button>(R.id.btnSelectDate)
-        val btnSelectTime = dialogView.findViewById<Button>(R.id.btnSelectTime)
-        val tvSelectedDateTime = dialogView.findViewById<TextView>(R.id.tvSelectedDateTime)
+
+        // Hide unnecessary views
+        dialogView.findViewById<EditText>(R.id.etDescription)?.visibility = android.view.View.GONE
+        dialogView.findViewById<Button>(R.id.btnSelectDate)?.visibility = android.view.View.GONE
+        dialogView.findViewById<Button>(R.id.btnSelectTime)?.visibility = android.view.View.GONE
+        dialogView.findViewById<TextView>(R.id.tvSelectedDateTime)?.visibility = android.view.View.GONE
 
         titleEdit.setText(todoList.title)
-        descriptionEdit.setText(todoList.description)
-
-        var selectedDate = todoList.selectedDate
-        var selectedTime = todoList.selectedTime
-
-        btnSelectDate.setOnClickListener {
-            val calendar = Calendar.getInstance().apply { timeInMillis = selectedDate }
-            showDatePicker(calendar) { date ->
-                selectedDate = date
-                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
-            }
-        }
-
-        btnSelectTime.setOnClickListener {
-            val calendar = Calendar.getInstance()
-            showTimePicker(calendar) { time ->
-                selectedTime = time
-                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
-            }
-        }
-
-        // Set initial date/time
-        updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
 
         AlertDialog.Builder(this, R.style.NeonDialog)
             .setTitle("Edit List")
             .setView(dialogView)
             .setPositiveButton("Save") { _, _ ->
                 val title = titleEdit.text.toString().trim()
-                val description = descriptionEdit.text.toString().trim()
                 if (title.isNotEmpty()) {
                     val updatedList = todoList.copy(
-                        title = title,
-                        description = description,
-                        selectedDate = selectedDate,
-                        selectedTime = selectedTime
+                        title = title
                     )
                     viewModel.updateList(updatedList)
                 }
@@ -223,36 +173,6 @@ class ListsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun showDatePicker(calendar: Calendar, onDateSelected: (Long) -> Unit) {
-        DatePickerDialog(
-            this,
-            { _, year, month, dayOfMonth ->
-                calendar.set(year, month, dayOfMonth)
-                onDateSelected(calendar.timeInMillis)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
-    }
-
-    private fun showTimePicker(calendar: Calendar, onTimeSelected: (String) -> Unit) {
-        TimePickerDialog(
-            this,
-            { _, hourOfDay, minute ->
-                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
-                calendar.set(Calendar.MINUTE, minute)
-                onTimeSelected(timeFormat.format(calendar.time))
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            true
-        ).show()
-    }
-
-    private fun updateSelectedDateTime(textView: TextView, date: Long, time: String) {
-        textView.text = "Selected: ${dateFormat.format(date)} at $time"
-    }
 
     private fun showDeleteConfirmation(todoList: TodoList) {
         AlertDialog.Builder(this)

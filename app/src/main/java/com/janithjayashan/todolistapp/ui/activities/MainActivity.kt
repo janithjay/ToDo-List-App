@@ -79,7 +79,7 @@ class MainActivity : AppCompatActivity() {
             R.id.action_restore -> {
                 if (firebaseBackupManager.isUserLoggedIn()) {
                     lifecycleScope.launch {
-                        firebaseBackupManager.restoreFromFirebase()
+                        firebaseBackupManager.restoreUserData()
                     }
                 } else {
                     Toast.makeText(this, "Please log in to restore data", Toast.LENGTH_SHORT).show()

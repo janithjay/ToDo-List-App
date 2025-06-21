@@ -11,23 +11,17 @@ import com.janithjayashan.todolistapp.data.database.entities.TodoItem
 import com.janithjayashan.todolistapp.data.database.entities.TodoList
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
-import com.google.firebase.database.GenericTypeIndicator
 
 class FirebaseBackupManager(private val context: Context) {
     private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private val scope = CoroutineScope(Dispatchers.IO + Job())
-    private val pendingBackups = mutableListOf<suspend () -> Unit>()
 
     // Check if user is logged in
-    fun isUserLoggedIn(): Boolean {
-        return auth.currentUser != null
-    }
+    fun isUserLoggedIn(): Boolean = auth.currentUser != null
 
     // Get current user ID
-    fun getCurrentUserId(): String? {
-        return auth.currentUser?.uid
-    }
+    fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     private fun isNetworkAvailable(): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -51,14 +45,17 @@ class FirebaseBackupManager(private val context: Context) {
 
             if (userId != null) {
                 val todoDao = TodoDatabase.getDatabase(context).todoDao()
+
+                // Get all lists and items using sync methods
                 val lists = todoDao.getAllListsSync()
                 val items = todoDao.getAllItemsSync()
 
-                val userRef = database.getReference("users").child(userId)
-                
+                // Create reference to user's data
+                val userRef = database.reference.child("users").child(userId)
+
                 // Backup lists with all fields
-                val listsData = lists.map { list ->
-                    mapOf(
+                val listsToBackup = lists.map { list ->
+                    mapOf<String, Any>(
                         "id" to list.id,
                         "title" to list.title,
                         "description" to list.description,
@@ -67,19 +64,22 @@ class FirebaseBackupManager(private val context: Context) {
                         "createdAt" to list.createdAt
                     )
                 }
-                userRef.child("lists").setValue(listsData).await()
+                userRef.child("lists").setValue(listsToBackup).await()
 
-                // Backup items
-                val itemsData = items.map { item ->
-                    mapOf(
+                // Backup items with all fields
+                val itemsToBackup = items.map { item ->
+                    mapOf<String, Any>(
                         "id" to item.id,
                         "listId" to item.listId,
+                        "title" to item.title,
                         "description" to item.description,
+                        "dueDate" to item.dueDate,
+                        "dueTime" to item.dueTime,
                         "position" to item.position,
                         "completed" to item.completed
                     )
                 }
-                userRef.child("items").setValue(itemsData).await()
+                userRef.child("items").setValue(itemsToBackup).await()
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "Backup completed successfully", Toast.LENGTH_SHORT).show()
@@ -92,7 +92,12 @@ class FirebaseBackupManager(private val context: Context) {
         }
     }
 
-    suspend fun restoreFromFirebase() {
+    suspend fun clearLocalData() {
+        val todoDao = TodoDatabase.getDatabase(context).todoDao()
+        todoDao.clearAllData()
+    }
+
+    suspend fun restoreUserData() {
         try {
             val userId = getCurrentUserId()
             if (!isNetworkAvailable()) {
@@ -103,159 +108,68 @@ class FirebaseBackupManager(private val context: Context) {
             }
 
             if (userId != null) {
-                val userRef = database.getReference("users").child(userId)
+                val userRef = database.reference.child("users").child(userId)
                 val dataSnapshot = userRef.get().await()
 
-                if (dataSnapshot.exists()) {
-                    val todoDao = TodoDatabase.getDatabase(context).todoDao()
+                val todoDao = TodoDatabase.getDatabase(context).todoDao()
 
-                    // Clear existing data
-                    todoDao.deleteAllLists()
-                    todoDao.deleteAllItems()
-
-                    // Restore lists with all fields
-                    val listsSnapshot = dataSnapshot.child("lists")
-                    val lists = mutableListOf<TodoList>()
-                    for (listSnapshot in listsSnapshot.children) {
-                        val map = listSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
-                        if (map != null) {
-                            lists.add(TodoList(
-                                id = (map["id"] as? Long) ?: 0L,
-                                title = (map["title"] as? String) ?: "",
-                                description = (map["description"] as? String) ?: "",
-                                selectedDate = (map["selectedDate"] as? Long) ?: System.currentTimeMillis(),
-                                selectedTime = (map["selectedTime"] as? String) ?: "",
-                                createdAt = (map["createdAt"] as? Long) ?: System.currentTimeMillis()
-                            ))
-                        }
-                    }
-                    todoDao.insertAllLists(lists)
-
-                    // Restore items
-                    val itemsSnapshot = dataSnapshot.child("items")
-                    val items = mutableListOf<TodoItem>()
-                    for (itemSnapshot in itemsSnapshot.children) {
-                        val map = itemSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
-                        if (map != null) {
-                            items.add(TodoItem(
-                                id = (map["id"] as? Long) ?: 0L,
-                                listId = (map["listId"] as? Long) ?: 0L,
-                                title = (map["title"] as? String) ?: "",
-                                description = (map["description"] as? String) ?: "",
-                                position = ((map["position"] as? Long)?.toInt()) ?: 0,
-                                dueDate = (map["dueDate"] as? Long) ?: System.currentTimeMillis(),
-                                dueTime = (map["dueTime"] as? String) ?: "00:00",
-                                completed = (map["completed"] as? Boolean) ?: false
-                            ))
-                        }
-                    }
-                    todoDao.insertAllItems(items)
-
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Restore completed successfully", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "No backup data found", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Restore failed: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    suspend fun clearLocalData() {
-        val todoDao = TodoDatabase.getDatabase(context).todoDao()
-        todoDao.clearAllData()
-    }
-
-    suspend fun restoreUserData() {
-        try {
-            val userId = getCurrentUserId()
-            if (userId == null) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "No user logged in", Toast.LENGTH_SHORT).show()
-                }
-                return
-            }
-
-            if (!isNetworkAvailable()) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "No internet connection available", Toast.LENGTH_SHORT).show()
-                }
-                return
-            }
-
-            val userRef = database.getReference("users").child(userId)
-            val dataSnapshot = userRef.get().await()
-
-            if (dataSnapshot.exists() && !dataSnapshot.child("lists").exists()) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "No backup data found for this user", Toast.LENGTH_SHORT).show()
-                }
-                return
-            }
-
-            val todoDao = TodoDatabase.getDatabase(context).todoDao()
-
-            if (dataSnapshot.exists()) {
-                // Clear existing data before restoring
+                // Clear existing data
                 todoDao.clearAllData()
 
-                // Restore lists with all fields
+                // Restore lists
                 val listsSnapshot = dataSnapshot.child("lists")
                 val lists = mutableListOf<TodoList>()
-                for (listSnapshot in listsSnapshot.children) {
-                    val map = listSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
-                    if (map != null) {
-                        lists.add(TodoList(
-                            id = (map["id"] as? Long) ?: 0L,
-                            title = (map["title"] as? String) ?: "",
-                            description = (map["description"] as? String) ?: "",
-                            selectedDate = (map["selectedDate"] as? Long) ?: System.currentTimeMillis(),
-                            selectedTime = (map["selectedTime"] as? String) ?: "",
-                            createdAt = (map["createdAt"] as? Long) ?: System.currentTimeMillis()
-                        ))
-                    }
-                }
+                listsSnapshot.children.forEach { listSnapshot ->
+                    val id = listSnapshot.child("id").getValue(Long::class.java) ?: 0L
+                    val title = listSnapshot.child("title").getValue(String::class.java) ?: ""
+                    val description = listSnapshot.child("description").getValue(String::class.java) ?: ""
+                    val selectedDate = listSnapshot.child("selectedDate").getValue(Long::class.java) ?: 0L
+                    val selectedTime = listSnapshot.child("selectedTime").getValue(Long::class.java) ?: 0L
+                    val createdAt = listSnapshot.child("createdAt").getValue(Long::class.java) ?: System.currentTimeMillis()
 
+                    lists.add(TodoList(
+                        id = id,
+                        title = title,
+                        description = description,
+                        selectedDate = selectedDate,
+                        selectedTime = selectedTime,
+                        createdAt = createdAt
+                    ))
+                }
                 if (lists.isNotEmpty()) {
                     todoDao.insertAllLists(lists)
                 }
 
-                // Restore items if they exist
+                // Restore items
                 val itemsSnapshot = dataSnapshot.child("items")
-                if (itemsSnapshot.exists()) {
-                    val items = mutableListOf<TodoItem>()
-                    for (itemSnapshot in itemsSnapshot.children) {
-                        val map = itemSnapshot.getValue(object : GenericTypeIndicator<Map<String, Any>>() {})
-                        if (map != null) {
-                            items.add(TodoItem(
-                                id = (map["id"] as? Long) ?: 0L,
-                                listId = (map["listId"] as? Long) ?: 0L,
-                                title = (map["title"] as? String) ?: "",
-                                description = (map["description"] as? String) ?: "",
-                                position = ((map["position"] as? Long)?.toInt()) ?: 0,
-                                dueDate = (map["dueDate"] as? Long) ?: System.currentTimeMillis(),
-                                dueTime = (map["dueTime"] as? String) ?: "00:00",
-                                completed = (map["completed"] as? Boolean) ?: false
-                            ))
-                        }
-                    }
-                    if (items.isNotEmpty()) {
-                        todoDao.insertAllItems(items)
-                    }
+                val items = mutableListOf<TodoItem>()
+                itemsSnapshot.children.forEach { itemSnapshot ->
+                    val id = itemSnapshot.child("id").getValue(Long::class.java) ?: 0L
+                    val listId = itemSnapshot.child("listId").getValue(Long::class.java) ?: 0L
+                    val title = itemSnapshot.child("title").getValue(String::class.java) ?: ""
+                    val description = itemSnapshot.child("description").getValue(String::class.java) ?: ""
+                    val dueDate = itemSnapshot.child("dueDate").getValue(Long::class.java) ?: System.currentTimeMillis()
+                    val dueTime = itemSnapshot.child("dueTime").getValue(String::class.java) ?: "00:00"
+                    val position = itemSnapshot.child("position").getValue(Int::class.java) ?: 0
+                    val completed = itemSnapshot.child("completed").getValue(Boolean::class.java) ?: false
+
+                    items.add(TodoItem(
+                        id = id,
+                        listId = listId,
+                        title = title,
+                        description = description,
+                        dueDate = dueDate,
+                        dueTime = dueTime,
+                        position = position,
+                        completed = completed
+                    ))
+                }
+                if (items.isNotEmpty()) {
+                    todoDao.insertAllItems(items)
                 }
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "User data restored successfully", Toast.LENGTH_SHORT).show()
-                }
-            } else {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Starting with fresh data for new user", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Data restored successfully", Toast.LENGTH_SHORT).show()
                 }
             }
         } catch (e: Exception) {
@@ -265,32 +179,16 @@ class FirebaseBackupManager(private val context: Context) {
         }
     }
 
-    private suspend fun handleBackupFailure(e: Exception) {
-        showToast("Backup failed: ${e.message}")
-    }
-
-    private suspend fun handleRestoreFailure(e: Exception) {
-        showToast("Restore failed: ${e.message}")
-    }
-
-    private suspend fun showToast(message: String) {
-        withContext(Dispatchers.Main) {
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // Call this when network becomes available
     fun processPendingBackups() {
-        if (isNetworkAvailable() && pendingBackups.isNotEmpty()) {
+        if (isUserLoggedIn() && isNetworkAvailable()) {
             scope.launch {
-                pendingBackups.forEach { pendingBackup ->
-                    try {
-                        pendingBackup()
-                    } catch (e: Exception) {
-                        handleBackupFailure(e)
+                try {
+                    backupToFirebase()
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Failed to process pending backups", Toast.LENGTH_SHORT).show()
                     }
                 }
-                pendingBackups.clear()
             }
         }
     }
