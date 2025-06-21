@@ -101,4 +101,52 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
     fun getTotalTaskCount(listId: Long): LiveData<Int> = repository.getTotalTaskCount(listId)
 
     fun getCompletedTaskCount(listId: Long): LiveData<Int> = repository.getCompletedTaskCount(listId)
+
+    // Sorting state
+    private val _currentListSortOrder = MutableLiveData<ListSortOrder>(ListSortOrder.NEWEST_FIRST)
+    val currentListSortOrder: LiveData<ListSortOrder> = _currentListSortOrder
+
+    private val _currentItemSortOrder = MutableLiveData<ItemSortOrder>(ItemSortOrder.DUE_EARLIEST)
+    val currentItemSortOrder: LiveData<ItemSortOrder> = _currentItemSortOrder
+
+    // Sort methods for lists
+    fun getListsByCurrentSort(): LiveData<List<TodoList>> {
+        return when (_currentListSortOrder.value) {
+            ListSortOrder.NEWEST_FIRST -> repository.getListsNewestFirst()
+            ListSortOrder.OLDEST_FIRST -> repository.getListsOldestFirst()
+            else -> repository.getListsNewestFirst()
+        }
+    }
+
+    fun setListSortOrder(order: ListSortOrder) {
+        _currentListSortOrder.value = order
+    }
+
+    // Sort methods for items
+    fun getItemsByCurrentSort(listId: Long): LiveData<List<TodoItem>> {
+        return when (_currentItemSortOrder.value) {
+            ItemSortOrder.DUE_EARLIEST -> repository.getItemsByListIdDueEarliest(listId)
+            ItemSortOrder.DUE_LATEST -> repository.getItemsByListIdDueLatest(listId)
+            ItemSortOrder.NEWEST_FIRST -> repository.getItemsByListIdNewestFirst(listId)
+            ItemSortOrder.OLDEST_FIRST -> repository.getItemsByListIdOldestFirst(listId)
+            else -> repository.getItemsByListIdDueEarliest(listId)
+        }
+    }
+
+    fun setItemSortOrder(order: ItemSortOrder) {
+        _currentItemSortOrder.value = order
+    }
+
+    // Sort order enums
+    enum class ListSortOrder {
+        NEWEST_FIRST,
+        OLDEST_FIRST
+    }
+
+    enum class ItemSortOrder {
+        DUE_EARLIEST,
+        DUE_LATEST,
+        NEWEST_FIRST,
+        OLDEST_FIRST
+    }
 }

@@ -24,5 +24,6 @@ data class TodoItem(
     val dueDate: Long = System.currentTimeMillis(),
     val dueTime: String = "00:00",
     val position: Int = 0,
-    val completed: Boolean = false
+    val completed: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
 )

@@ -114,7 +114,7 @@ class ListsActivity : AppCompatActivity() {
     }
 
     private fun observeLists() {
-        viewModel.getAllLists().observe(this) { lists ->
+        viewModel.getListsByCurrentSort().observe(this) { lists ->
             allLists = lists
             adapter.submitList(lists)
         }
@@ -188,6 +188,7 @@ class ListsActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.lists_menu, menu)
+        menuInflater.inflate(R.menu.sort_menu, menu)
         return true
     }
 
@@ -237,6 +238,16 @@ class ListsActivity : AppCompatActivity() {
                     }
                     .setNegativeButton("Cancel", null)
                     .show()
+                true
+            }
+            R.id.sort_created_newest -> {
+                item.isChecked = true
+                viewModel.setListSortOrder(TodoViewModel.ListSortOrder.NEWEST_FIRST)
+                true
+            }
+            R.id.sort_created_oldest -> {
+                item.isChecked = true
+                viewModel.setListSortOrder(TodoViewModel.ListSortOrder.OLDEST_FIRST)
                 true
             }
             else -> super.onOptionsItemSelected(item)

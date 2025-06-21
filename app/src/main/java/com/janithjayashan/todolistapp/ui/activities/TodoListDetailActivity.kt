@@ -5,6 +5,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
@@ -102,8 +103,12 @@ class TodoListDetailActivity : AppCompatActivity() {
     }
 
     private fun observeItems() {
-        viewModel.getItemsByListId(listId).observe(this) { items ->
-            adapter.submitList(items)
+        // Observe sort order changes
+        viewModel.currentItemSortOrder.observe(this) {
+            // When sort order changes, get items with new sort order
+            viewModel.getItemsByCurrentSort(listId).observe(this) { items ->
+                adapter.submitList(items)
+            }
         }
     }
 
@@ -256,5 +261,40 @@ class TodoListDetailActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         finish()
         return true
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.sort_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            R.id.sort_created_newest -> {
+                item.isChecked = true
+                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.NEWEST_FIRST)
+                true
+            }
+            R.id.sort_created_oldest -> {
+                item.isChecked = true
+                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.OLDEST_FIRST)
+                true
+            }
+            R.id.sort_due_earliest -> {
+                item.isChecked = true
+                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.DUE_EARLIEST)
+                true
+            }
+            R.id.sort_due_latest -> {
+                item.isChecked = true
+                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.DUE_LATEST)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }

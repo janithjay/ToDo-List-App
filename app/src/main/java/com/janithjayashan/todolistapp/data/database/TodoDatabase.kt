@@ -4,12 +4,14 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.janithjayashan.todolistapp.data.database.entities.TodoItem
 import com.janithjayashan.todolistapp.data.database.entities.TodoList
 
 @Database(
     entities = [TodoList::class, TodoItem::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class TodoDatabase : RoomDatabase() {
@@ -29,8 +31,8 @@ abstract class TodoDatabase : RoomDatabase() {
                 )
                 .addMigrations(
                     // Migration from 1 to 2
-                    object : androidx.room.migration.Migration(1, 2) {
-                        override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    object : Migration(1, 2) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
                             // Create new todo_lists table with all required columns
                             database.execSQL("""
                                 CREATE TABLE IF NOT EXISTS todo_lists_new (
@@ -55,8 +57,8 @@ abstract class TodoDatabase : RoomDatabase() {
                         }
                     },
                     // Migration from 2 to 3
-                    object : androidx.room.migration.Migration(2, 3) {
-                        override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    object : Migration(2, 3) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
                             // Drop existing todo_items table and its index if they exist
                             database.execSQL("DROP INDEX IF EXISTS index_todo_items_listId")
                             database.execSQL("DROP TABLE IF EXISTS todo_items")
@@ -78,8 +80,8 @@ abstract class TodoDatabase : RoomDatabase() {
                         }
                     },
                     // Migration from 3 to 4
-                    object : androidx.room.migration.Migration(3, 4) {
-                        override fun migrate(database: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    object : Migration(3, 4) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
                             // Drop existing table and index
                             database.execSQL("DROP INDEX IF EXISTS index_todo_items_listId")
                             database.execSQL("DROP TABLE IF EXISTS todo_items_new")
@@ -129,6 +131,13 @@ abstract class TodoDatabase : RoomDatabase() {
 
                             // Create the index exactly as Room expects it
                             database.execSQL("CREATE INDEX index_todo_items_listId ON todo_items(listId)")
+                        }
+                    },
+                    // Migration from 6 to 7
+                    object : Migration(6, 7) {
+                        override fun migrate(database: SupportSQLiteDatabase) {
+                            // Add createdAt column with current timestamp as default
+                            database.execSQL("ALTER TABLE todo_items ADD COLUMN createdAt INTEGER NOT NULL DEFAULT ${System.currentTimeMillis()}")
                         }
                     }
                 )

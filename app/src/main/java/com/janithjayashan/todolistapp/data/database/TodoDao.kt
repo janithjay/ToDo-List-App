@@ -70,4 +70,24 @@ interface TodoDao {
 
     @Query("SELECT COUNT(*) FROM todo_items WHERE listId = :listId AND completed = 1")
     fun getCompletedTaskCount(listId: Long): LiveData<Int>
+
+    // Sorted List Queries
+    @Query("SELECT * FROM todo_lists ORDER BY createdAt DESC")
+    fun getListsNewestFirst(): LiveData<List<TodoList>>
+
+    @Query("SELECT * FROM todo_lists ORDER BY createdAt ASC")
+    fun getListsOldestFirst(): LiveData<List<TodoList>>
+
+    // Sorted Item Queries
+    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY createdAt DESC")
+    fun getItemsByListIdNewestFirst(listId: Long): LiveData<List<TodoItem>>
+
+    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY createdAt ASC")
+    fun getItemsByListIdOldestFirst(listId: Long): LiveData<List<TodoItem>>
+
+    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY dueDate ASC, dueTime ASC")
+    fun getItemsByListIdDueEarliest(listId: Long): LiveData<List<TodoItem>>
+
+    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY dueDate DESC, dueTime DESC")
+    fun getItemsByListIdDueLatest(listId: Long): LiveData<List<TodoItem>>
 }

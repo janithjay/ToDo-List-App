@@ -35,4 +35,14 @@ class TodoRepository(private val todoDao: TodoDao) {
     fun getTotalTaskCount(listId: Long): LiveData<Int> = todoDao.getTotalTaskCount(listId)
 
     fun getCompletedTaskCount(listId: Long): LiveData<Int> = todoDao.getCompletedTaskCount(listId)
+
+    // List sorting methods
+    fun getListsNewestFirst(): LiveData<List<TodoList>> = todoDao.getListsNewestFirst()
+    fun getListsOldestFirst(): LiveData<List<TodoList>> = todoDao.getListsOldestFirst()
+
+    // Item sorting methods
+    fun getItemsByListIdDueEarliest(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdDueEarliest(listId)
+    fun getItemsByListIdDueLatest(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdDueLatest(listId)
+    fun getItemsByListIdNewestFirst(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdNewestFirst(listId)
+    fun getItemsByListIdOldestFirst(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdOldestFirst(listId)
 }
