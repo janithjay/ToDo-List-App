@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base colors -->
+    <color name="primary">#FF8C42</color>
+    <color name="primary_dark">#E67A2E</color>
+    <color name="primary_light">#FFB980</color>
+    <color name="accent">#FFA45C</color>
+
+    <!-- Background colors -->
+    <color name="background_dark">#1C1917</color>
+    <color name="background_medium">#292524</color>
+    <color name="surface_card">#332F2D</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#FFF8E8</color>
+    <color name="text_secondary">#FFE5B9</color>
+    <color name="text_hint">#B8A088</color>
+
+    <!-- Button and interactive element colors -->
+    <color name="button_color">#FF8C42</color>
+    <color name="button_pressed">#E67A2E</color>
+
+    <!-- Gradient colors -->
+    <color name="gradient_start">#1C1917</color>
+    <color name="gradient_center">#292524</color>
+    <color name="gradient_end">#332F2D</color>
+</resources>

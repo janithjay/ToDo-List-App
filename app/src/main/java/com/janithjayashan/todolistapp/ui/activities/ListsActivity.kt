@@ -26,7 +26,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ListsActivity : AppCompatActivity() {
-
     private lateinit var viewModel: TodoViewModel
     private lateinit var adapter: TodoListsAdapter
     private lateinit var backupManager: FirebaseBackupManager
