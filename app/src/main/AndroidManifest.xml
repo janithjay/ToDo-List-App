@@ -33,8 +33,7 @@
 
         <activity
             android:name=".ui.activities.ListsActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.activities.MainActivity" />
+            android:exported="false" />
 
         <activity
             android:name=".ui.activities.TodoListDetailActivity"
