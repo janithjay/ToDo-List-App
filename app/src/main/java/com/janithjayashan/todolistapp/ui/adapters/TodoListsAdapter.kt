@@ -32,8 +32,9 @@ class TodoListsAdapter(
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titleTextView: TextView = itemView.findViewById(R.id.tvListTitle)
-        private val statisticsTextView: TextView = itemView.findViewById(R.id.tvDate) // Reusing date TextView for statistics
+        private val statisticsTextView: TextView = itemView.findViewById(R.id.tvDate)
         private val editButton: ImageButton = itemView.findViewById(R.id.btnEdit)
+        private val deleteButton: ImageButton = itemView.findViewById(R.id.btnDelete)
 
         fun bind(todoList: TodoList) {
             titleTextView.text = todoList.title
@@ -47,6 +48,7 @@ class TodoListsAdapter(
 
             itemView.setOnClickListener { onListClick(todoList) }
             editButton.setOnClickListener { onEditClick(todoList) }
+            deleteButton.setOnClickListener { onDeleteClick(todoList) }
         }
     }
 
