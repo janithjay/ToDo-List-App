@@ -210,8 +210,8 @@ class ListsActivity : AppCompatActivity() {
                             backupManager.clearLocalData()
                             // Logout from Firebase
                             FirebaseAuth.getInstance().signOut()
-                            // Navigate back to MainActivity (login screen)
-                            val intent = Intent(this@ListsActivity, MainActivity::class.java)
+                            // Navigate directly to LoginActivity
+                            val intent = Intent(this@ListsActivity, LoginActivity::class.java)
                             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             startActivity(intent)
                             finish()
@@ -249,7 +249,7 @@ class ListsActivity : AppCompatActivity() {
         super.onStart()
         // Check if user is logged in, if not, redirect to login
         if (!backupManager.isUserLoggedIn()) {
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()

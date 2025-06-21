@@ -2,11 +2,10 @@ package com.janithjayashan.todolistapp.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.airbnb.lottie.LottieDrawable
 import com.janithjayashan.todolistapp.R
 import com.janithjayashan.todolistapp.utils.FirebaseBackupManager
-import com.ncorti.slidetoact.SlideToActView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,14 +22,18 @@ class LoadingActivity : AppCompatActivity() {
         // Hide action bar for full-screen effect
         supportActionBar?.hide()
 
-
-        // Setup swipe button
-        val swipeButton = findViewById<SlideToActView>(R.id.swipeButton)
-        swipeButton.onSlideCompleteListener = object : SlideToActView.OnSlideCompleteListener {
-            override fun onSlideComplete(view: SlideToActView) {
-                navigateToNextScreen()
-            }
+        // Setup go to lists button
+        findViewById<Button>(R.id.btnGoToLists).setOnClickListener {
+            navigateToNextScreen()
         }
+
+        // Update button text based on login state
+        updateButtonText()
+    }
+
+    private fun updateButtonText() {
+        val button = findViewById<Button>(R.id.btnGoToLists)
+        button.text = if (backupManager.isUserLoggedIn()) "Go to Lists" else "Login"
     }
 
     private fun navigateToNextScreen() {
@@ -40,9 +43,10 @@ class LoadingActivity : AppCompatActivity() {
                 backupManager.restoreUserData()
                 startActivity(Intent(this@LoadingActivity, ListsActivity::class.java))
             } else {
-                // If no user is logged in, go to MainActivity (login screen)
-                startActivity(Intent(this@LoadingActivity, MainActivity::class.java))
+                // If no user is logged in, go directly to login screen
+                startActivity(Intent(this@LoadingActivity, LoginActivity::class.java))
             }
+            finish() // Close the loading activity
         }
     }
 }
