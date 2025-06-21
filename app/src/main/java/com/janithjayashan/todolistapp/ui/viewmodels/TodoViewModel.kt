@@ -49,9 +49,25 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun insertItem(todoItem: TodoItem) {
+        viewModelScope.launch {
+            repository.insertItem(todoItem)
+        }
+    }
+
+    // Keep the existing method for backward compatibility
     fun insertItem(listId: Long, description: String, position: Int) {
         viewModelScope.launch {
-            repository.insertItem(TodoItem(listId = listId, description = description, position = position))
+            repository.insertItem(TodoItem(
+                id = 0,
+                listId = listId,
+                title = "",
+                description = description,
+                position = position,
+                dueDate = System.currentTimeMillis(),
+                dueTime = "00:00",
+                completed = false
+            ))
         }
     }
 

@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.janithjayashan.todolistapp.R
 import com.janithjayashan.todolistapp.data.database.entities.TodoItem
+import java.text.SimpleDateFormat
+import java.util.*
 
 class TodoItemsAdapter(
     private val onItemClick: (TodoItem) -> Unit,
@@ -19,9 +21,11 @@ class TodoItemsAdapter(
     private val onEditClick: (TodoItem) -> Unit
 ) : ListAdapter<TodoItem, TodoItemsAdapter.ViewHolder>(DiffCallback()) {
 
+    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_todo_item, parent, false)
+            .inflate(R.layout.item_todo, parent, false)
         return ViewHolder(view)
     }
 
@@ -30,29 +34,37 @@ class TodoItemsAdapter(
     }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val checkBox: CheckBox = itemView.findViewById(R.id.checkBoxItem)
-        private val descriptionTextView: TextView = itemView.findViewById(R.id.textViewDescription)
-        private val editButton: ImageButton = itemView.findViewById(R.id.buttonEditItem)
-        private val deleteButton: ImageButton = itemView.findViewById(R.id.buttonDeleteItem)
+        private val checkBox: CheckBox = itemView.findViewById(R.id.checkBoxCompleted)
+        private val titleTextView: TextView = itemView.findViewById(R.id.tvTitle)
+        private val descriptionTextView: TextView = itemView.findViewById(R.id.tvDescription)
+        private val dateTimeTextView: TextView = itemView.findViewById(R.id.tvDateTime)
+        private val editButton: ImageButton = itemView.findViewById(R.id.btnEdit)
+        private val deleteButton: ImageButton = itemView.findViewById(R.id.btnDelete)
 
         fun bind(todoItem: TodoItem) {
             checkBox.isChecked = todoItem.completed
+            titleTextView.text = todoItem.title
             descriptionTextView.text = todoItem.description
+            dateTimeTextView.text = "Due: ${dateFormat.format(todoItem.dueDate)} at ${todoItem.dueTime}"
 
-            // Strike through completed items
-            if (todoItem.completed) {
-                descriptionTextView.paintFlags = descriptionTextView.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            // Strike through text for completed items
+            val paintFlags = if (todoItem.completed) {
+                Paint.STRIKE_THRU_TEXT_FLAG
             } else {
-                descriptionTextView.paintFlags = descriptionTextView.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                0
             }
+            titleTextView.paintFlags = paintFlags
+            descriptionTextView.paintFlags = paintFlags
+            dateTimeTextView.paintFlags = paintFlags
 
+            // Set click listeners
             checkBox.setOnClickListener { onItemClick(todoItem) }
             editButton.setOnClickListener { onEditClick(todoItem) }
             deleteButton.setOnClickListener { onDeleteClick(todoItem) }
         }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<TodoItem>() {
+    private class DiffCallback : DiffUtil.ItemCallback<TodoItem>() {
         override fun areItemsTheSame(oldItem: TodoItem, newItem: TodoItem): Boolean {
             return oldItem.id == newItem.id
         }

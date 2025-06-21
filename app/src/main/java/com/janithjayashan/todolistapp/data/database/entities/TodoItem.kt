@@ -19,7 +19,10 @@ data class TodoItem(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val listId: Long,
-    val description: String,
+    val title: String,
+    val description: String = "",
+    val dueDate: Long = System.currentTimeMillis(),
+    val dueTime: String = "00:00",
     val position: Int = 0,
     val completed: Boolean = false
 )

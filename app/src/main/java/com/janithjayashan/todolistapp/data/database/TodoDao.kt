@@ -25,7 +25,7 @@ interface TodoDao {
     suspend fun getListById(listId: Long): TodoList?
 
     // TodoItem operations
-    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY position ASC")
+    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY dueDate ASC, dueTime ASC, position ASC")
     fun getItemsByListId(listId: Long): LiveData<List<TodoItem>>
 
     @Insert
@@ -40,12 +40,24 @@ interface TodoDao {
     @Query("UPDATE todo_items SET position = :newPosition WHERE id = :itemId")
     suspend fun updateItemPosition(itemId: Long, newPosition: Int)
 
-    // Search functionality
-    @Query("SELECT DISTINCT todo_lists.* FROM todo_lists INNER JOIN todo_items ON todo_lists.id = todo_items.listId WHERE todo_items.description LIKE '%' || :searchQuery || '%' OR todo_lists.title LIKE '%' || :searchQuery || '%'")
+    // Enhanced search functionality
+    @Query("SELECT DISTINCT todo_lists.* FROM todo_lists " +
+           "INNER JOIN todo_items ON todo_lists.id = todo_items.listId " +
+           "WHERE todo_items.title LIKE '%' || :searchQuery || '%' " +
+           "OR todo_items.description LIKE '%' || :searchQuery || '%' " +
+           "OR todo_lists.title LIKE '%' || :searchQuery || '%'")
     suspend fun searchLists(searchQuery: String): List<TodoList>
 
-    @Query("SELECT * FROM todo_items WHERE description LIKE '%' || :searchQuery || '%'")
+    @Query("SELECT * FROM todo_items WHERE title LIKE '%' || :searchQuery || '%' " +
+           "OR description LIKE '%' || :searchQuery || '%'")
     suspend fun searchItems(searchQuery: String): List<TodoItem>
+
+    // Due date queries
+    @Query("SELECT * FROM todo_items WHERE listId = :listId AND dueDate = :date")
+    fun getItemsByDueDate(listId: Long, date: Long): LiveData<List<TodoItem>>
+
+    @Query("SELECT * FROM todo_items WHERE listId = :listId AND completed = 0 AND dueDate < :currentDate")
+    fun getOverdueItems(listId: Long, currentDate: Long): LiveData<List<TodoItem>>
 
     // Backup and Restore functionality
     @Query("DELETE FROM todo_lists")

@@ -1,8 +1,14 @@
 package com.janithjayashan.todolistapp.ui.activities
 
 import android.app.AlertDialog
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -13,6 +19,8 @@ import com.janithjayashan.todolistapp.R
 import com.janithjayashan.todolistapp.data.database.entities.TodoItem
 import com.janithjayashan.todolistapp.ui.adapters.TodoItemsAdapter
 import com.janithjayashan.todolistapp.ui.viewmodels.TodoViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 class TodoListDetailActivity : AppCompatActivity() {
 
@@ -20,6 +28,8 @@ class TodoListDetailActivity : AppCompatActivity() {
     private lateinit var adapter: TodoItemsAdapter
     private var listId: Long = -1
     private var listTitle: String = ""
+    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,17 +108,52 @@ class TodoListDetailActivity : AppCompatActivity() {
     }
 
     private fun showAddItemDialog() {
-        val editText = EditText(this)
-        editText.hint = "Enter item description"
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_edit_task, null)
+        val titleEdit = dialogView.findViewById<EditText>(R.id.etTaskTitle)
+        val descriptionEdit = dialogView.findViewById<EditText>(R.id.etTaskDescription)
+        val btnSelectDate = dialogView.findViewById<Button>(R.id.btnSelectDate)
+        val btnSelectTime = dialogView.findViewById<Button>(R.id.btnSelectTime)
+        val tvSelectedDateTime = dialogView.findViewById<TextView>(R.id.tvSelectedDateTime)
+
+        val calendar = Calendar.getInstance()
+        var selectedDate = calendar.timeInMillis
+        var selectedTime = timeFormat.format(calendar.time)
+
+        btnSelectDate.setOnClickListener {
+            showDatePicker(calendar) { date ->
+                selectedDate = date
+                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
+            }
+        }
+
+        btnSelectTime.setOnClickListener {
+            showTimePicker(calendar) { time ->
+                selectedTime = time
+                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
+            }
+        }
+
+        updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
 
         AlertDialog.Builder(this)
-            .setTitle("Add New Item")
-            .setView(editText)
+            .setTitle("Add New Task")
+            .setView(dialogView)
             .setPositiveButton("Add") { _, _ ->
-                val description = editText.text.toString().trim()
-                if (description.isNotEmpty()) {
-                    val position = adapter.itemCount
-                    viewModel.insertItem(listId, description, position)
+                val title = titleEdit.text.toString().trim()
+                val description = descriptionEdit.text.toString().trim()
+                if (title.isNotEmpty()) {
+                    val position = adapter.currentList.size  // Set position to end of list
+                    val todoItem = TodoItem(
+                        id = 0, // AutoGenerate will handle this
+                        listId = listId,
+                        title = title,
+                        description = description,
+                        dueDate = selectedDate,
+                        dueTime = selectedTime,
+                        position = position,
+                        completed = false
+                    )
+                    viewModel.insertItem(todoItem)
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -116,20 +161,85 @@ class TodoListDetailActivity : AppCompatActivity() {
     }
 
     private fun showEditItemDialog(todoItem: TodoItem) {
-        val editText = EditText(this)
-        editText.setText(todoItem.description)
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_edit_task, null)
+        val titleEdit = dialogView.findViewById<EditText>(R.id.etTaskTitle)
+        val descriptionEdit = dialogView.findViewById<EditText>(R.id.etTaskDescription)
+        val btnSelectDate = dialogView.findViewById<Button>(R.id.btnSelectDate)
+        val btnSelectTime = dialogView.findViewById<Button>(R.id.btnSelectTime)
+        val tvSelectedDateTime = dialogView.findViewById<TextView>(R.id.tvSelectedDateTime)
+
+        titleEdit.setText(todoItem.title)
+        descriptionEdit.setText(todoItem.description)
+
+        var selectedDate = todoItem.dueDate
+        var selectedTime = todoItem.dueTime
+
+        btnSelectDate.setOnClickListener {
+            val calendar = Calendar.getInstance().apply { timeInMillis = selectedDate }
+            showDatePicker(calendar) { date ->
+                selectedDate = date
+                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
+            }
+        }
+
+        btnSelectTime.setOnClickListener {
+            showTimePicker(Calendar.getInstance()) { time ->
+                selectedTime = time
+                updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
+            }
+        }
+
+        updateSelectedDateTime(tvSelectedDateTime, selectedDate, selectedTime)
 
         AlertDialog.Builder(this)
-            .setTitle("Edit Item")
-            .setView(editText)
-            .setPositiveButton("Update") { _, _ ->
-                val description = editText.text.toString().trim()
-                if (description.isNotEmpty()) {
-                    viewModel.updateItem(todoItem.copy(description = description))
+            .setTitle("Edit Task")
+            .setView(dialogView)
+            .setPositiveButton("Save") { _, _ ->
+                val title = titleEdit.text.toString().trim()
+                val description = descriptionEdit.text.toString().trim()
+                if (title.isNotEmpty()) {
+                    val updatedItem = todoItem.copy(
+                        title = title,
+                        description = description,
+                        dueDate = selectedDate,
+                        dueTime = selectedTime
+                    )
+                    viewModel.updateItem(updatedItem)
                 }
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun showDatePicker(calendar: Calendar, onDateSelected: (Long) -> Unit) {
+        DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                calendar.set(year, month, dayOfMonth)
+                onDateSelected(calendar.timeInMillis)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+    private fun showTimePicker(calendar: Calendar, onTimeSelected: (String) -> Unit) {
+        TimePickerDialog(
+            this,
+            { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(Calendar.MINUTE, minute)
+                onTimeSelected(timeFormat.format(calendar.time))
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        ).show()
+    }
+
+    private fun updateSelectedDateTime(textView: TextView, date: Long, time: String) {
+        textView.text = "Due: ${dateFormat.format(date)} at $time"
     }
 
     private fun showDeleteConfirmation(todoItem: TodoItem) {

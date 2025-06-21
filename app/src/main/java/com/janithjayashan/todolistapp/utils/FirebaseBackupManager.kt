@@ -140,8 +140,11 @@ class FirebaseBackupManager(private val context: Context) {
                             items.add(TodoItem(
                                 id = (map["id"] as? Long) ?: 0L,
                                 listId = (map["listId"] as? Long) ?: 0L,
+                                title = (map["title"] as? String) ?: "",
                                 description = (map["description"] as? String) ?: "",
                                 position = ((map["position"] as? Long)?.toInt()) ?: 0,
+                                dueDate = (map["dueDate"] as? Long) ?: System.currentTimeMillis(),
+                                dueTime = (map["dueTime"] as? String) ?: "00:00",
                                 completed = (map["completed"] as? Boolean) ?: false
                             ))
                         }
@@ -233,8 +236,11 @@ class FirebaseBackupManager(private val context: Context) {
                             items.add(TodoItem(
                                 id = (map["id"] as? Long) ?: 0L,
                                 listId = (map["listId"] as? Long) ?: 0L,
+                                title = (map["title"] as? String) ?: "",
                                 description = (map["description"] as? String) ?: "",
                                 position = ((map["position"] as? Long)?.toInt()) ?: 0,
+                                dueDate = (map["dueDate"] as? Long) ?: System.currentTimeMillis(),
+                                dueTime = (map["dueTime"] as? String) ?: "00:00",
                                 completed = (map["completed"] as? Boolean) ?: false
                             ))
                         }
