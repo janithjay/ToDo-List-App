@@ -97,4 +97,8 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             _searchResults.value = repository.searchLists(query)
         }
     }
+
+    fun getTotalTaskCount(listId: Long): LiveData<Int> = repository.getTotalTaskCount(listId)
+
+    fun getCompletedTaskCount(listId: Long): LiveData<Int> = repository.getCompletedTaskCount(listId)
 }

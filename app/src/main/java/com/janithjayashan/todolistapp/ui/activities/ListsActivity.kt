@@ -78,8 +78,7 @@ class ListsActivity : AppCompatActivity() {
             adapter.submitList(allLists)
         } else {
             val filteredList = allLists.filter { todoList ->
-                todoList.title.contains(query, ignoreCase = true) ||
-                todoList.description.contains(query, ignoreCase = true)
+                todoList.title.contains(query, ignoreCase = true)
             }
             adapter.submitList(filteredList)
         }
@@ -99,7 +98,9 @@ class ListsActivity : AppCompatActivity() {
             },
             onEditClick = { todoList ->
                 showEditListDialog(todoList)
-            }
+            },
+            getTotalTasks = { listId -> viewModel.getTotalTaskCount(listId) },
+            getCompletedTasks = { listId -> viewModel.getCompletedTaskCount(listId) }
         )
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)

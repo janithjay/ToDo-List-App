@@ -31,4 +31,8 @@ class TodoRepository(private val todoDao: TodoDao) {
     suspend fun searchLists(searchQuery: String): List<TodoList> = todoDao.searchLists(searchQuery)
 
     suspend fun searchItems(searchQuery: String): List<TodoItem> = todoDao.searchItems(searchQuery)
+
+    fun getTotalTaskCount(listId: Long): LiveData<Int> = todoDao.getTotalTaskCount(listId)
+
+    fun getCompletedTaskCount(listId: Long): LiveData<Int> = todoDao.getCompletedTaskCount(listId)
 }

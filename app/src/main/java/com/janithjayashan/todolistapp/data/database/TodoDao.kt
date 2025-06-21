@@ -63,4 +63,11 @@ interface TodoDao {
 
     @Query("SELECT * FROM todo_items WHERE title LIKE '%' || :searchQuery || '%'")
     suspend fun searchItems(searchQuery: String): List<TodoItem>
+
+    // Task statistics
+    @Query("SELECT COUNT(*) FROM todo_items WHERE listId = :listId")
+    fun getTotalTaskCount(listId: Long): LiveData<Int>
+
+    @Query("SELECT COUNT(*) FROM todo_items WHERE listId = :listId AND completed = 1")
+    fun getCompletedTaskCount(listId: Long): LiveData<Int>
 }

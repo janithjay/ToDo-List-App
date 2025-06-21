@@ -58,9 +58,6 @@ class FirebaseBackupManager(private val context: Context) {
                     mapOf<String, Any>(
                         "id" to list.id,
                         "title" to list.title,
-                        "description" to list.description,
-                        "selectedDate" to list.selectedDate,
-                        "selectedTime" to list.selectedTime,
                         "createdAt" to list.createdAt
                     )
                 }
@@ -130,9 +127,6 @@ class FirebaseBackupManager(private val context: Context) {
                     lists.add(TodoList(
                         id = id,
                         title = title,
-                        description = description,
-                        selectedDate = selectedDate,
-                        selectedTime = selectedTime,
                         createdAt = createdAt
                     ))
                 }

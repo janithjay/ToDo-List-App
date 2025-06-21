@@ -9,7 +9,7 @@ import com.janithjayashan.todolistapp.data.database.entities.TodoList
 
 @Database(
     entities = [TodoList::class, TodoItem::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class TodoDatabase : RoomDatabase() {

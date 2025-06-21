@@ -5,21 +5,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.janithjayashan.todolistapp.R
 import com.janithjayashan.todolistapp.data.database.entities.TodoList
-import java.text.SimpleDateFormat
-import java.util.*
 
 class TodoListsAdapter(
     private val onListClick: (TodoList) -> Unit,
     private val onDeleteClick: (TodoList) -> Unit,
-    private val onEditClick: (TodoList) -> Unit
+    private val onEditClick: (TodoList) -> Unit,
+    private val getTotalTasks: (Long) -> LiveData<Int>,
+    private val getCompletedTasks: (Long) -> LiveData<Int>
 ) : ListAdapter<TodoList, TodoListsAdapter.ViewHolder>(DiffCallback()) {
-
-    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -33,21 +32,17 @@ class TodoListsAdapter(
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val titleTextView: TextView = itemView.findViewById(R.id.tvListTitle)
-        private val descriptionTextView: TextView = itemView.findViewById(R.id.tvDescription)
-        private val dateTextView: TextView = itemView.findViewById(R.id.tvDate)
-        private val timeTextView: TextView = itemView.findViewById(R.id.tvTime)
+        private val statisticsTextView: TextView = itemView.findViewById(R.id.tvDate) // Reusing date TextView for statistics
         private val editButton: ImageButton = itemView.findViewById(R.id.btnEdit)
 
         fun bind(todoList: TodoList) {
             titleTextView.text = todoList.title
-            descriptionTextView.text = todoList.description
-            dateTextView.text = dateFormat.format(todoList.selectedDate)
-            timeTextView.text = todoList.selectedTime.toString()
 
-            if (todoList.description.isEmpty()) {
-                descriptionTextView.visibility = View.GONE
-            } else {
-                descriptionTextView.visibility = View.VISIBLE
+            // Observe and display task statistics
+            getTotalTasks(todoList.id).observeForever { totalTasks ->
+                getCompletedTasks(todoList.id).observeForever { completedTasks ->
+                    statisticsTextView.text = "$completedTasks/$totalTasks tasks completed"
+                }
             }
 
             itemView.setOnClickListener { onListClick(todoList) }
