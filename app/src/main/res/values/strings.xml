@@ -10,4 +10,6 @@
     <string name="search">Search</string>
     <string name="backup">Backup</string>
     <string name="restore">Restore</string>
+    <string name="sort">Sort</string>
+    <string name="add_new_list">Add new list</string>
 </resources>

@@ -24,16 +24,12 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 class ListsActivity : AppCompatActivity() {
 
     private lateinit var viewModel: TodoViewModel
     private lateinit var adapter: TodoListsAdapter
     private lateinit var backupManager: FirebaseBackupManager
-    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private var allLists = listOf<TodoList>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,6 +109,12 @@ class ListsActivity : AppCompatActivity() {
         }
     }
 
+
+    private fun sortLists(sorter: (List<TodoList>) -> List<TodoList>) {
+        allLists = sorter(allLists)
+        adapter.submitList(allLists.toList())
+    }
+
     private fun observeLists() {
         viewModel.getListsByCurrentSort().observe(this) { lists ->
             allLists = lists
@@ -188,7 +190,7 @@ class ListsActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.lists_menu, menu)
-        menuInflater.inflate(R.menu.sort_menu, menu)
+        menuInflater.inflate(R.menu.lists_sort_menu, menu)
         return true
     }
 
@@ -196,6 +198,16 @@ class ListsActivity : AppCompatActivity() {
         return when (item.itemId) {
             android.R.id.home -> {
                 finish()
+                true
+            }
+            R.id.sort_created_newest -> {
+                item.isChecked = true
+                sortLists { lists -> lists.sortedByDescending { it.createdAt } }
+                true
+            }
+            R.id.sort_created_oldest -> {
+                item.isChecked = true
+                sortLists { lists -> lists.sortedBy { it.createdAt } }
                 true
             }
             R.id.action_logout -> {
@@ -238,16 +250,6 @@ class ListsActivity : AppCompatActivity() {
                     }
                     .setNegativeButton("Cancel", null)
                     .show()
-                true
-            }
-            R.id.sort_created_newest -> {
-                item.isChecked = true
-                viewModel.setListSortOrder(TodoViewModel.ListSortOrder.NEWEST_FIRST)
-                true
-            }
-            R.id.sort_created_oldest -> {
-                item.isChecked = true
-                viewModel.setListSortOrder(TodoViewModel.ListSortOrder.OLDEST_FIRST)
                 true
             }
             else -> super.onOptionsItemSelected(item)

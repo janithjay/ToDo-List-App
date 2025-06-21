@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu_sort_lists"
+        android:title="Sort"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        app:showAsAction="ifRoom">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/sort_created_newest"
+                    android:title="Created (Newest First)" />
+                <item
+                    android:id="@+id/sort_created_oldest"
+                    android:title="Created (Oldest First)" />
+            </group>
+        </menu>
+    </item>
+</menu>
+
