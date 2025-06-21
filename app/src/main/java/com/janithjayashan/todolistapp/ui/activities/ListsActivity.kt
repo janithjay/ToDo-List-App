@@ -130,7 +130,7 @@ class ListsActivity : AppCompatActivity() {
         dialogView.findViewById<Button>(R.id.btnSelectTime)?.visibility = android.view.View.GONE
         dialogView.findViewById<TextView>(R.id.tvSelectedDateTime)?.visibility = android.view.View.GONE
 
-        AlertDialog.Builder(this, R.style.NeonDialog)
+        AlertDialog.Builder(this, R.style.AppDialog)
             .setTitle("Add New List")
             .setView(dialogView)
             .setPositiveButton("Add") { _, _ ->
@@ -158,7 +158,7 @@ class ListsActivity : AppCompatActivity() {
 
         titleEdit.setText(todoList.title)
 
-        AlertDialog.Builder(this, R.style.NeonDialog)
+        AlertDialog.Builder(this, R.style.AppDialog)
             .setTitle("Edit List")
             .setView(dialogView)
             .setPositiveButton("Save") { _, _ ->
@@ -176,7 +176,7 @@ class ListsActivity : AppCompatActivity() {
 
 
     private fun showDeleteConfirmation(todoList: TodoList) {
-        AlertDialog.Builder(this)
+        AlertDialog.Builder(this, R.style.AppDialog)
             .setTitle("Delete List")
             .setMessage("Are you sure you want to delete '${todoList.title}'? This will also delete all items in this list.")
             .setPositiveButton("Delete") { _, _ ->
@@ -198,8 +198,7 @@ class ListsActivity : AppCompatActivity() {
                 true
             }
             R.id.action_logout -> {
-                // Show confirmation dialog before logout
-                AlertDialog.Builder(this)
+                AlertDialog.Builder(this, R.style.AppDialog)
                     .setTitle("Logout")
                     .setMessage("Your data will be backed up before logging out. Do you want to continue?")
                     .setPositiveButton("Yes") { _, _ ->
@@ -228,8 +227,7 @@ class ListsActivity : AppCompatActivity() {
                 true
             }
             R.id.action_restore -> {
-                // Show confirmation dialog before restore
-                AlertDialog.Builder(this)
+                AlertDialog.Builder(this, R.style.AppDialog)
                     .setTitle("Restore Data")
                     .setMessage("This will restore your data from the last backup. Current data will be replaced. Continue?")
                     .setPositiveButton("Yes") { _, _ ->

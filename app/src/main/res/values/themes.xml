@@ -1,46 +1,56 @@
 <resources>
-    <!--<style name="Theme.ToDoListApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        &lt;!&ndash; Your colors &ndash;&gt;
-        <item name="colorPrimary">@color/primary_color</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
-        <item name="colorAccent">@color/accent_color</item>
-        <item name="android:statusBarColor">@color/primary_dark</item>
-        <item name="android:navigationBarColor">@color/primary_dark</item>
-        <item name="android:windowLightStatusBar">true</item>
-    </style>-->
-
     <style name="Theme.ToDoListApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <item name="android:windowBackground">@color/background_dark</item>
-        <item name="colorPrimary">@color/neon_blue</item>
-        <item name="colorAccent">@color/neon_pink</item>
+        <!-- Main theme colors -->
+        <item name="android:windowBackground">@drawable/gradient_background</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="colorSurface">@color/surface_card</item>
+
+        <!-- Text colors -->
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:buttonStyle">@style/NeonButton</item>
+
+        <!-- Status bar and navigation bar -->
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:navigationBarColor">@color/primary_dark</item>
+
+        <!-- Default styles -->
+        <item name="android:buttonStyle">@style/AppButton</item>
+        <item name="materialCardViewStyle">@style/AppCard</item>
     </style>
 
     <style name="Theme.ToDoListApp.NoActionBar" parent="Theme.ToDoListApp">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:windowBackground">@color/black</item>
         <item name="android:windowFullscreen">true</item>
     </style>
 
-    <style name="NeonButton" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/neon_blue</item>
+    <style name="AppButton" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/button_color</item>
         <item name="android:textColor">@color/text_primary</item>
-        <item name="cornerRadius">24dp</item>
-        <item name="android:elevation">8dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:elevation">4dp</item>
+        <item name="rippleColor">@color/ripple_color</item>
     </style>
 
-    <style name="NeonDialog" parent="Theme.MaterialComponents.Dialog.Alert">
-        <item name="android:background">@color/background_dark</item>
+    <style name="AppCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">@color/surface_card</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="strokeColor">@color/primary_light</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="AppDialog" parent="Theme.MaterialComponents.Dialog.Alert">
+        <item name="android:background">@color/background_medium</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="buttonBarPositiveButtonStyle">@style/NeonDialogButton</item>
-        <item name="buttonBarNegativeButtonStyle">@style/NeonDialogButton</item>
+        <item name="buttonBarPositiveButtonStyle">@style/AppDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/AppDialogButton</item>
     </style>
 
-    <style name="NeonDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
-        <item name="android:textColor">@color/neon_blue</item>
+    <style name="AppDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/accent</item>
+        <item name="rippleColor">@color/ripple_color</item>
     </style>
-
 </resources>

@@ -4,59 +4,58 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark">
-
+    android:background="@drawable/gradient_background">
 
     <ImageView
         android:id="@+id/appIcon"
-        android:layout_width="211dp"
-        android:layout_height="196dp"
-        android:layout_marginTop="118dp"
+        android:layout_width="244dp"
+        android:layout_height="232dp"
+        android:layout_marginTop="90dp"
         android:contentDescription="App Icon"
         android:src="@mipmap/ic_launcher_foreground"
         app:layout_constraintBottom_toTopOf="@id/welcomeText"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
         app:layout_constraintVertical_chainStyle="packed" />
-
-    <Button
-        android:id="@+id/btnGoToLists"
-        style="@style/NeonButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="32dp"
-        android:layout_marginTop="492dp"
-        android:paddingVertical="16dp"
-        android:text="Go to Lists"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.8" />
 
     <TextView
         android:id="@+id/welcomeText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="392dp"
+        android:layout_marginTop="12dp"
         android:fontFamily="sans-serif-medium"
         android:gravity="center"
         android:text="Welcome to \nJanith's TO DO List!"
-        android:textColor="@color/neon_blue"
+        android:textColor="@color/text_primary"
         android:textSize="32sp"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appIcon"
         tools:layout_editor_absoluteX="0dp" />
+
+    <Button
+        android:id="@+id/btnGoToLists"
+        style="@style/AppButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="32dp"
+        android:layout_marginTop="144dp"
+        android:paddingVertical="16dp"
+        android:text="Go to Lists"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/welcomeText"
+        app:layout_constraintWidth_percent="0.8" />
 
     <TextView
         android:id="@+id/studentInfoText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="28dp"
+        android:layout_marginBottom="16dp"
         android:gravity="center"
         android:text="This App was developed by \nR M J Jayashan - (D/BCE/23/0009)"
-        android:textColor="@color/neon_blue"
+        android:textColor="@color/text_secondary"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
