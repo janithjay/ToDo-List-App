@@ -7,17 +7,21 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@drawable/gradient_background">
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:background="@android:color/white"
+            android:background="@color/surface_card"
             android:elevation="4dp"
             app:iconifiedByDefault="false"
-            app:queryHint="Search lists..." />
+            app:queryHint="Search lists..."
+            app:queryBackground="@android:color/transparent"
+            app:searchIcon="@null"
+            android:theme="@style/AppSearchView" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewLists"
