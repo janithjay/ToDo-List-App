@@ -67,8 +67,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("com.airbnb.android:lottie:6.1.0")
-    implementation("com.ncorti:slidetoact:0.11.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
