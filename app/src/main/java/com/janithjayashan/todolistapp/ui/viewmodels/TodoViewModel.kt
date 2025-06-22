@@ -106,9 +106,6 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentListSortOrder = MutableLiveData<ListSortOrder>(ListSortOrder.NEWEST_FIRST)
     val currentListSortOrder: LiveData<ListSortOrder> = _currentListSortOrder
 
-    private val _currentItemSortOrder = MutableLiveData<ItemSortOrder>(ItemSortOrder.DUE_EARLIEST)
-    val currentItemSortOrder: LiveData<ItemSortOrder> = _currentItemSortOrder
-
     // Sort methods for lists
     fun getListsByCurrentSort(): LiveData<List<TodoList>> {
         return when (_currentListSortOrder.value) {
@@ -122,21 +119,6 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         _currentListSortOrder.value = order
     }
 
-    // Sort methods for items
-    fun getItemsByCurrentSort(listId: Long): LiveData<List<TodoItem>> {
-        return when (_currentItemSortOrder.value) {
-            ItemSortOrder.DUE_EARLIEST -> repository.getItemsByListIdDueEarliest(listId)
-            ItemSortOrder.DUE_LATEST -> repository.getItemsByListIdDueLatest(listId)
-            ItemSortOrder.NEWEST_FIRST -> repository.getItemsByListIdNewestFirst(listId)
-            ItemSortOrder.OLDEST_FIRST -> repository.getItemsByListIdOldestFirst(listId)
-            else -> repository.getItemsByListIdDueEarliest(listId)
-        }
-    }
-
-    fun setItemSortOrder(order: ItemSortOrder) {
-        _currentItemSortOrder.value = order
-    }
-
     // Sort order enums
     enum class ListSortOrder {
         NEWEST_FIRST,
@@ -144,9 +126,26 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     enum class ItemSortOrder {
-        DUE_EARLIEST,
-        DUE_LATEST,
         NEWEST_FIRST,
-        OLDEST_FIRST
+        OLDEST_FIRST,
+        DUE_EARLIEST,
+        DUE_LATEST
+    }
+
+    private val _currentItemSortOrder = MutableLiveData<ItemSortOrder>()
+    val currentItemSortOrder: LiveData<ItemSortOrder> = _currentItemSortOrder
+
+    fun setItemSortOrder(order: ItemSortOrder) {
+        _currentItemSortOrder.value = order
+    }
+
+    fun getItemsByCurrentSort(listId: Long): LiveData<List<TodoItem>> {
+        return when (_currentItemSortOrder.value) {
+            ItemSortOrder.NEWEST_FIRST -> repository.getItemsNewestFirst(listId)
+            ItemSortOrder.OLDEST_FIRST -> repository.getItemsOldestFirst(listId)
+            ItemSortOrder.DUE_EARLIEST -> repository.getItemsDueEarliest(listId)
+            ItemSortOrder.DUE_LATEST -> repository.getItemsDueLatest(listId)
+            null -> repository.getItemsNewestFirst(listId) // Default sorting
+        }
     }
 }

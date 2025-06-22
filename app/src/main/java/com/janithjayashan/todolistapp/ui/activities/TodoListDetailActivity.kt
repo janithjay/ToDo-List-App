@@ -103,11 +103,17 @@ class TodoListDetailActivity : AppCompatActivity() {
     }
 
     private fun observeItems() {
-        // Observe sort order changes
+        // First, observe items directly
+        viewModel.getItemsByListId(listId).observe(this) { items ->
+            adapter.submitList(items)
+        }
+
+        // Then observe sort order changes
         viewModel.currentItemSortOrder.observe(this) {
-            // When sort order changes, get items with new sort order
-            viewModel.getItemsByCurrentSort(listId).observe(this) { items ->
-                adapter.submitList(items)
+            if (it != null) {  // Only change sort if an order is explicitly selected
+                viewModel.getItemsByCurrentSort(listId).observe(this) { items ->
+                    adapter.submitList(items)
+                }
             }
         }
     }

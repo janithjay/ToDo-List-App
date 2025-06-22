@@ -41,8 +41,8 @@ class TodoRepository(private val todoDao: TodoDao) {
     fun getListsOldestFirst(): LiveData<List<TodoList>> = todoDao.getListsOldestFirst()
 
     // Item sorting methods
-    fun getItemsByListIdDueEarliest(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdDueEarliest(listId)
-    fun getItemsByListIdDueLatest(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdDueLatest(listId)
-    fun getItemsByListIdNewestFirst(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdNewestFirst(listId)
-    fun getItemsByListIdOldestFirst(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdOldestFirst(listId)
+    fun getItemsNewestFirst(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdNewestFirst(listId)
+    fun getItemsOldestFirst(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdOldestFirst(listId)
+    fun getItemsDueEarliest(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdDueEarliest(listId)
+    fun getItemsDueLatest(listId: Long): LiveData<List<TodoItem>> = todoDao.getItemsByListIdDueLatest(listId)
 }
