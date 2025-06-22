@@ -11,7 +11,7 @@ import com.janithjayashan.todolistapp.data.database.entities.TodoList
 
 @Database(
     entities = [TodoList::class, TodoItem::class],
-    version = 7,
+    version = 5,
     exportSchema = false
 )
 abstract class TodoDatabase : RoomDatabase() {
@@ -133,8 +133,8 @@ abstract class TodoDatabase : RoomDatabase() {
                             database.execSQL("CREATE INDEX index_todo_items_listId ON todo_items(listId)")
                         }
                     },
-                    // Migration from 6 to 7
-                    object : Migration(6, 7) {
+                    // Migration from 4 to 5
+                    object : Migration(4, 5) {
                         override fun migrate(database: SupportSQLiteDatabase) {
                             // Add createdAt column with current timestamp as default
                             database.execSQL("ALTER TABLE todo_items ADD COLUMN createdAt INTEGER NOT NULL DEFAULT ${System.currentTimeMillis()}")
