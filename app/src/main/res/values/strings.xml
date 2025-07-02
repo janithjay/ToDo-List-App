@@ -1,15 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ToDo List</string>
-    <string name="welcome_message">Welcome to Janith Jayashan\'s TO DO List!</string>
-    <string name="developer_info">This App was developed by R M J Jayashan (D/BCE/23/0009)</string>
-    <string name="go_to_lists">Go to Lists</string>
-    <string name="add_list">Add List</string>
-    <string name="add_item">Add Item</string>
-    <string name="edit">Edit</string>
-    <string name="delete">Delete</string>
+    <string name="app_name">Todo List App</string>
+    <string name="due_date_time">Due: %1$s at %2$s</string>
+    <string name="add_new_list">Add new list</string>
     <string name="search">Search</string>
     <string name="backup">Backup</string>
     <string name="restore">Restore</string>
-    <string name="sort">Sort</string>
-    <string name="add_new_list">Add new list</string>
 </resources>

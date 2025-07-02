@@ -126,12 +126,6 @@ class ListsActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun sortLists(sorter: (List<TodoList>) -> List<TodoList>) {
-        allLists = sorter(allLists)
-        adapter.submitList(allLists.toList())
-    }
-
     private fun observeLists() {
         viewModel.getListsByCurrentSort().observe(this) { lists ->
             allLists = lists
@@ -207,22 +201,11 @@ class ListsActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.lists_menu, menu)
-        menuInflater.inflate(R.menu.lists_sort_menu, menu)
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.sort_created_newest -> {
-                item.isChecked = true
-                sortLists { lists -> lists.sortedByDescending { it.createdAt } }
-                true
-            }
-            R.id.sort_created_oldest -> {
-                item.isChecked = true
-                sortLists { lists -> lists.sortedBy { it.createdAt } }
-                true
-            }
             R.id.action_logout -> {
                 AlertDialog.Builder(this, R.style.AppDialog)
                     .setTitle("Logout")

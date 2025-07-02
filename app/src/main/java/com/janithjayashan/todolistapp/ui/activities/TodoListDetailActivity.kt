@@ -75,8 +75,8 @@ class TodoListDetailActivity : AppCompatActivity() {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-                val fromPosition = viewHolder.adapterPosition
-                val toPosition = target.adapterPosition
+                val fromPosition = viewHolder.bindingAdapterPosition
+                val toPosition = target.bindingAdapterPosition
 
                 // Update positions in database
                 val items = adapter.currentList
@@ -250,7 +250,9 @@ class TodoListDetailActivity : AppCompatActivity() {
     }
 
     private fun updateSelectedDateTime(textView: TextView, date: Long, time: String) {
-        textView.text = "Due: ${dateFormat.format(date)} at $time"
+        val formattedDate = dateFormat.format(date)
+        val text = getString(R.string.due_date_time, formattedDate, time)
+        textView.text = text
     }
 
     private fun showDeleteConfirmation(todoItem: TodoItem) {
@@ -270,7 +272,6 @@ class TodoListDetailActivity : AppCompatActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.sort_menu, menu)
         return true
     }
 
@@ -278,26 +279,6 @@ class TodoListDetailActivity : AppCompatActivity() {
         return when (item.itemId) {
             android.R.id.home -> {
                 finish()
-                true
-            }
-            R.id.sort_created_newest -> {
-                item.isChecked = true
-                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.NEWEST_FIRST)
-                true
-            }
-            R.id.sort_created_oldest -> {
-                item.isChecked = true
-                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.OLDEST_FIRST)
-                true
-            }
-            R.id.sort_due_earliest -> {
-                item.isChecked = true
-                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.DUE_EARLIEST)
-                true
-            }
-            R.id.sort_due_latest -> {
-                item.isChecked = true
-                viewModel.setItemSortOrder(TodoViewModel.ItemSortOrder.DUE_LATEST)
                 true
             }
             else -> super.onOptionsItemSelected(item)
