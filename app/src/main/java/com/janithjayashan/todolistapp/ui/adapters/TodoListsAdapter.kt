@@ -56,7 +56,12 @@ class TodoListsAdapter(
                     val taskView = LayoutInflater.from(itemView.context)
                         .inflate(R.layout.item_matching_task, matchingTasksContainer, false)
                     val taskDescText = taskView.findViewById<TextView>(R.id.tvTaskDescription)
-                    taskDescText.text = "• ${item.description}"
+                    val itemText = if (item.title.isNotEmpty()) {
+                        "• ${item.title} - ${item.description}"
+                    } else {
+                        "• ${item.description}"
+                    }
+                    taskDescText.text = itemText
                     matchingTasksContainer.addView(taskView)
                 }
             } else {

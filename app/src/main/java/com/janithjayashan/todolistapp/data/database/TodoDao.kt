@@ -58,7 +58,7 @@ interface TodoDao {
     @Query("UPDATE todo_items SET position = :newPosition WHERE id = :itemId")
     suspend fun updateItemPosition(itemId: Long, newPosition: Int)
 
-    @Query("SELECT * FROM todo_lists WHERE title LIKE '%' || :searchQuery || '%'")
+    @Query("SELECT * FROM todo_lists WHERE title LIKE '%' || :searchQuery || '%' OR id IN (SELECT listId FROM todo_items WHERE title LIKE '%' || :searchQuery || '%')")
     suspend fun searchLists(searchQuery: String): List<TodoList>
 
     @Query("SELECT * FROM todo_items WHERE title LIKE '%' || :searchQuery || '%' OR description LIKE '%' || :searchQuery || '%'")
