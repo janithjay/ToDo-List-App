@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.DiffUtil
@@ -35,6 +36,7 @@ class TodoListsAdapter(
         private val statisticsTextView: TextView = itemView.findViewById(R.id.tvDate)
         private val editButton: ImageButton = itemView.findViewById(R.id.btnEdit)
         private val deleteButton: ImageButton = itemView.findViewById(R.id.btnDelete)
+        private val matchingTasksContainer: LinearLayout = itemView.findViewById(R.id.matchingTasksContainer)
 
         fun bind(todoList: TodoList) {
             titleTextView.text = todoList.title
@@ -44,6 +46,21 @@ class TodoListsAdapter(
                 getCompletedTasks(todoList.id).observeForever { completedTasks ->
                     statisticsTextView.text = "$completedTasks/$totalTasks tasks completed"
                 }
+            }
+
+            // Handle matching items display
+            matchingTasksContainer.removeAllViews()
+            if (todoList.matchingItems.isNotEmpty()) {
+                matchingTasksContainer.visibility = View.VISIBLE
+                todoList.matchingItems.forEach { item ->
+                    val taskView = LayoutInflater.from(itemView.context)
+                        .inflate(R.layout.item_matching_task, matchingTasksContainer, false)
+                    val taskDescText = taskView.findViewById<TextView>(R.id.tvTaskDescription)
+                    taskDescText.text = "• ${item.description}"
+                    matchingTasksContainer.addView(taskView)
+                }
+            } else {
+                matchingTasksContainer.visibility = View.GONE
             }
 
             itemView.setOnClickListener { onListClick(todoList) }
@@ -58,7 +75,7 @@ class TodoListsAdapter(
         }
 
         override fun areContentsTheSame(oldItem: TodoList, newItem: TodoList): Boolean {
-            return oldItem == newItem
+            return oldItem == newItem && oldItem.matchingItems == newItem.matchingItems
         }
     }
 }

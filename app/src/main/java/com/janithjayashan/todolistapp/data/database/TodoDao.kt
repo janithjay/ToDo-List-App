@@ -61,7 +61,7 @@ interface TodoDao {
     @Query("SELECT * FROM todo_lists WHERE title LIKE '%' || :searchQuery || '%'")
     suspend fun searchLists(searchQuery: String): List<TodoList>
 
-    @Query("SELECT * FROM todo_items WHERE title LIKE '%' || :searchQuery || '%'")
+    @Query("SELECT * FROM todo_items WHERE title LIKE '%' || :searchQuery || '%' OR description LIKE '%' || :searchQuery || '%'")
     suspend fun searchItems(searchQuery: String): List<TodoItem>
 
     // Task statistics

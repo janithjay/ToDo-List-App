@@ -89,12 +89,15 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private val _searchResults = MutableLiveData<List<TodoList>>()
-    val searchResults: LiveData<List<TodoList>> = _searchResults
+    private val _searchResults = MutableLiveData<SearchResult>()
+    val searchResults: LiveData<SearchResult> = _searchResults
 
     fun searchLists(query: String) {
         viewModelScope.launch {
-            _searchResults.value = repository.searchLists(query)
+            val matchingLists = repository.searchLists(query)
+            val matchingItems = repository.searchItems(query)
+            val groupedItems = matchingItems.groupBy { it.listId }
+            _searchResults.value = SearchResult(matchingLists, groupedItems)
         }
     }
 
@@ -148,4 +151,13 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
             null -> repository.getItemsNewestFirst(listId) // Default sorting
         }
     }
+
+    suspend fun getListById(listId: Long): TodoList? {
+        return repository.getListById(listId)
+    }
+
+    data class SearchResult(
+        val lists: List<TodoList>,
+        val items: Map<Long, List<TodoItem>>
+    )
 }

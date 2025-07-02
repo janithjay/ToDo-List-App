@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -19,6 +20,7 @@ import com.janithjayashan.todolistapp.R
 import com.janithjayashan.todolistapp.data.database.entities.TodoList
 import com.janithjayashan.todolistapp.ui.adapters.TodoListsAdapter
 import com.janithjayashan.todolistapp.ui.viewmodels.TodoViewModel
+import com.janithjayashan.todolistapp.ui.viewmodels.TodoViewModel.SearchResult
 import com.janithjayashan.todolistapp.utils.FirebaseBackupManager
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
@@ -61,20 +63,37 @@ class ListsActivity : AppCompatActivity() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                filterLists(newText)
+                if (newText.isNullOrBlank()) {
+                    adapter.submitList(allLists)
+                } else {
+                    viewModel.searchLists(newText)
+                }
                 return true
             }
         })
-    }
 
-    private fun filterLists(query: String?) {
-        if (query.isNullOrBlank()) {
-            adapter.submitList(allLists)
-        } else {
-            val filteredList = allLists.filter { todoList ->
-                todoList.title.contains(query, ignoreCase = true)
+        viewModel.searchResults.observe(this) { searchResult ->
+            val combinedLists = mutableListOf<TodoList>()
+
+            // Add lists that match by title
+            combinedLists.addAll(searchResult.lists)
+
+            // Add lists that contain matching items
+            lifecycleScope.launch {
+                searchResult.items.forEach { (listId, items) ->
+                    if (!combinedLists.any { it.id == listId }) {
+                        val list = viewModel.getListById(listId)
+                        list?.let { foundList ->
+                            combinedLists.add(foundList.copy().apply {
+                                matchingItems = items
+                            })
+                        }
+                    } else {
+                        combinedLists.find { it.id == listId }?.matchingItems = items
+                    }
+                }
+                adapter.submitList(combinedLists)
             }
-            adapter.submitList(filteredList)
         }
     }
 
