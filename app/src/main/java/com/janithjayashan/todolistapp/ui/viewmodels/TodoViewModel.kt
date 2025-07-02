@@ -89,6 +89,14 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updateItemPositions(updates: List<Pair<Long, Int>>) {
+        viewModelScope.launch {
+            updates.forEach { (itemId, position) ->
+                repository.updateItemPosition(itemId, position)
+            }
+        }
+    }
+
     private val _searchResults = MutableLiveData<SearchResult>()
     val searchResults: LiveData<SearchResult> = _searchResults
 

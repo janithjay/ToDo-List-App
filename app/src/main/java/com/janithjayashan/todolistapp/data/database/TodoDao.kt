@@ -31,7 +31,7 @@ interface TodoDao {
     suspend fun getListById(listId: Long): TodoList?
 
     // TodoItem operations
-    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY id DESC")
+    @Query("SELECT * FROM todo_items WHERE listId = :listId ORDER BY position ASC")
     fun getItemsByListId(listId: Long): LiveData<List<TodoItem>>
 
     @Query("SELECT * FROM todo_items")

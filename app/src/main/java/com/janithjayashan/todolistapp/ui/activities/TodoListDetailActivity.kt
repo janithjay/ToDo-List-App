@@ -70,6 +70,9 @@ class TodoListDetailActivity : AppCompatActivity() {
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
         ) {
+            private var startPosition = -1
+            private var endPosition = -1
+
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -78,18 +81,42 @@ class TodoListDetailActivity : AppCompatActivity() {
                 val fromPosition = viewHolder.bindingAdapterPosition
                 val toPosition = target.bindingAdapterPosition
 
-                // Update positions in database
-                val items = adapter.currentList
-                if (fromPosition < items.size && toPosition < items.size) {
-                    val item = items[fromPosition]
-                    viewModel.updateItemPosition(item.id, toPosition)
+                if (startPosition == -1) {
+                    startPosition = fromPosition
                 }
+                endPosition = toPosition
+
+                val currentList = adapter.currentList.toMutableList()
+                val item = currentList[fromPosition]
+                currentList.removeAt(fromPosition)
+                currentList.add(toPosition, item)
+                adapter.submitList(currentList)
 
                 return true
             }
 
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+                super.clearView(recyclerView, viewHolder)
+
+                if (startPosition != -1 && endPosition != -1 && startPosition != endPosition) {
+                    val currentList = adapter.currentList
+                    val updates = currentList.mapIndexed { index, todoItem ->
+                        todoItem.id to index
+                    }
+                    viewModel.updateItemPositions(updates)
+                }
+
+                // Reset positions
+                startPosition = -1
+                endPosition = -1
+            }
+
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 // Not used
+            }
+
+            override fun isLongPressDragEnabled(): Boolean {
+                return true
             }
         })
         itemTouchHelper.attachToRecyclerView(recyclerView)
@@ -103,18 +130,9 @@ class TodoListDetailActivity : AppCompatActivity() {
     }
 
     private fun observeItems() {
-        // First, observe items directly
+        // Only observe the manual ordering
         viewModel.getItemsByListId(listId).observe(this) { items ->
             adapter.submitList(items)
-        }
-
-        // Then observe sort order changes
-        viewModel.currentItemSortOrder.observe(this) {
-            if (it != null) {  // Only change sort if an order is explicitly selected
-                viewModel.getItemsByCurrentSort(listId).observe(this) { items ->
-                    adapter.submitList(items)
-                }
-            }
         }
     }
 
@@ -153,7 +171,13 @@ class TodoListDetailActivity : AppCompatActivity() {
                 val title = titleEdit.text.toString().trim()
                 val description = descriptionEdit.text.toString().trim()
                 if (title.isNotEmpty()) {
-                    val position = adapter.currentList.size  // Set position to end of list
+                    // Shift all existing items' positions down by 1
+                    val currentList = adapter.currentList
+                    currentList.forEachIndexed { index, item ->
+                        viewModel.updateItemPosition(item.id, index + 1)
+                    }
+
+                    // Add new item at position 0 (top)
                     val todoItem = TodoItem(
                         id = 0, // AutoGenerate will handle this
                         listId = listId,
@@ -161,7 +185,7 @@ class TodoListDetailActivity : AppCompatActivity() {
                         description = description,
                         dueDate = selectedDate,
                         dueTime = selectedTime,
-                        position = position,
+                        position = 0, // Place at the top
                         completed = false
                     )
                     viewModel.insertItem(todoItem)
