@@ -13,8 +13,8 @@ import com.janithjayashan.todolistapp.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var firebaseBackupManager: FirebaseBackupManager
-    private lateinit var networkObserver: NetworkConnectivityObserver
+    private lateinit var firebaseBackupManager: FirebaseBackupManager //initialize FirebaseBackupManager
+    private lateinit var networkObserver: NetworkConnectivityObserver //set up network observer
     private lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
